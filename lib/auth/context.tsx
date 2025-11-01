@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed:', event, 'User:', session?.user?.email || 'null');
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -120,24 +121,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('🔐 Attempting sign in with email:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase auth error:', error);
+        throw error;
+      }
+
+      console.log('✅ Supabase auth successful, user:', data.user?.email);
+
+      // Manually update the auth state immediately
+      setSession(data.session);
+      setUser(data.user);
+      setLoading(false);
+      console.log('✅ Auth state manually updated');
 
       // Update last login time
       if (data.user) {
-        await supabase
+        console.log('📝 Updating last login time...');
+        const { error: updateError } = await supabase
           .from('users')
           .update({ last_login: new Date().toISOString() })
           .eq('id', data.user.id);
+
+        if (updateError) {
+          console.warn('⚠️ Failed to update last login:', updateError);
+        } else {
+          console.log('✅ Last login updated');
+        }
       }
 
+      console.log('🚀 Navigating to /app/overview...');
       router.push('/app/overview');
+      console.log('✅ router.push called');
     } catch (error: any) {
-      console.error('Sign in error:', error);
+      console.error('❌ Sign in error:', error);
       throw new Error(error.message || 'Failed to sign in');
     }
   };
