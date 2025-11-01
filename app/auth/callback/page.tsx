@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { Box, CircularProgress, Typography, Alert } from '@mui/material';
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -94,5 +94,30 @@ export default function AuthCallbackPage() {
         </>
       )}
     </Box>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+          p: 3,
+        }}
+      >
+        <CircularProgress size={60} sx={{ color: 'white', mb: 3 }} />
+        <Typography variant="h5" sx={{ color: 'white', fontWeight: 600 }}>
+          Loading...
+        </Typography>
+      </Box>
+    }>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }
