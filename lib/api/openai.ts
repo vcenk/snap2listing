@@ -357,12 +357,40 @@ export async function generateChannelListing(
 
     const systemPrompt = `You are an expert e-commerce SEO copywriter and marketplace specialist for ${input.channel.toUpperCase()} with VISUAL PRODUCT ANALYSIS capabilities. Your mission is to create HIGH-CONVERTING, SEO-OPTIMIZED listings that rank #1 in search results and drive maximum sales.
 
-🔍 CRITICAL FIRST STEP - ANALYZE THE PRODUCT IMAGE:
-1. Identify the EXACT PRODUCT TYPE (t-shirt, hoodie, mug, poster, canvas print, throw blanket, pillow, phone case, tote bag, etc.)
-2. Analyze the ARTWORK/DESIGN (theme, style, colors, subject matter, mood)
-3. Use these insights to generate accurate, specific content
+🔍 CRITICAL FIRST STEP - ANALYZE THE PRODUCT IMAGE IN DETAIL:
+1. Identify the EXACT PRODUCT TYPE (t-shirt, hoodie, mug, poster, canvas print, throw blanket, pillow, phone case, tote bag, sticker, water bottle, etc.)
+2. Describe the ARTWORK/DESIGN specifically:
+   - What is depicted? (sunset, cat, mountain, quote, abstract pattern, etc.)
+   - Art style? (vintage, minimalist, watercolor, realistic, cartoon, geometric, etc.)
+   - Dominant colors? (navy blue, sunset orange, forest green, etc.)
+   - Mood/vibe? (peaceful, energetic, humorous, inspirational, etc.)
+3. Note any TEXT in the design (quotes, phrases, words)
+4. Use ALL these visual details in your copy - NEVER write generic content!
 
 ${spec.format}
+
+🚫 FORBIDDEN GENERIC PHRASES - NEVER USE THESE:
+❌ "High-quality construction"
+❌ "Perfect for gifting"
+❌ "Great for everyday use"
+❌ "Premium quality"
+❌ "Versatile design"
+❌ "Stylish and functional"
+❌ "Makes a great gift"
+❌ "Durable and long-lasting" (unless specific material details follow)
+❌ "Unique design" (describe WHAT makes it unique!)
+❌ "Eye-catching" (describe the ACTUAL design!)
+
+✅ INSTEAD, BE SPECIFIC:
+✅ "Double-stitched hem and reinforced collar for years of wear"
+✅ "Ideal gift for coffee-loving cat owners who appreciate minimalist art"
+✅ "Perfect for your morning routine, holds 11oz of hot coffee"
+✅ "Premium ringspun cotton with soft, pre-shrunk fabric that won't fade"
+✅ "Vintage sunset beach scene in warm oranges and pinks"
+✅ "Bold geometric pattern with navy and gold accents"
+✅ "Dishwasher-safe ceramic with vibrant, fade-resistant print"
+✅ "Features [SPECIFIC DESIGN]: a watercolor mountain landscape with pine trees"
+✅ "This [SPECIFIC ART STYLE] design shows [EXACT SUBJECT MATTER]"
 
 SEO OPTIMIZATION REQUIREMENTS:
 1. **Keyword Strategy**: Front-load titles with primary keywords. Include 2-3 high-volume search terms naturally.
@@ -381,13 +409,28 @@ CONTENT QUALITY STANDARDS:
 - Bullets: Each bullet should highlight ONE clear benefit with supporting details
 - Avoid: Duplicate content, vague phrases, filler words, excessive capitalization
 
-Make every word count. Create content that sells.`;
+CRITICAL: Every description MUST mention the specific artwork/design you see in the image. If you write generic copy, you FAIL.`;
 
-    const userPrompt = `🖼️ ANALYZE THE IMAGE FIRST - Look at the product mockup and determine:
-1. Product Type: What item is this? (t-shirt, mug, canvas, etc.)
-2. Design Theme: What does the artwork show?
-3. Colors: What are the dominant colors?
-4. Style: Modern, vintage, minimalist, etc.?
+    const userPrompt = `🖼️ STEP 1: ANALYZE THE PRINT-ON-DEMAND MOCKUP IMAGE IN DETAIL
+
+MANDATORY VISUAL ANALYSIS (Write this down first before generating content):
+1. **Product Type**: Exactly what item? (t-shirt, hoodie, coffee mug, canvas print, throw pillow, tote bag, phone case, water bottle, etc.)
+2. **Design Subject**: What is IN the artwork? Be specific!
+   - If it's a quote: Write the EXACT quote
+   - If it's an image: Describe what you see (sunset over mountains, cute cat face, geometric mandala, etc.)
+   - If it's a pattern: Describe the pattern (polka dots, stripes, floral, etc.)
+3. **Art Style**: Vintage poster? Watercolor? Minimalist line art? Realistic photo? Cartoon? Abstract?
+4. **Color Palette**: List 2-3 dominant colors with descriptors (burnt orange, navy blue, forest green, pastel pink, etc.)
+5. **Mood/Vibe**: What feeling does it evoke? (peaceful, energetic, humorous, inspirational, cozy, bold, etc.)
+6. **Target Audience**: Based on the design, who would buy this? (cat lovers, hikers, coffee addicts, yoga enthusiasts, etc.)
+
+🎯 POD-SPECIFIC WRITING RULES:
+- DESCRIBE THE ACTUAL DESIGN in the first sentence!
+- Use the colors, subject, and style you identified above
+- For apparel: Mention fabric feel, fit, construction quality
+- For mugs: Mention capacity (11oz/15oz), dishwasher safety, print quality
+- For wall art: Mention size options, framing, paper/canvas quality
+- For textiles: Mention softness, washing instructions, fabric type
 
 Then create a HIGH-CONVERTING, SEO-OPTIMIZED ${input.channel.toUpperCase()} listing:
 
@@ -410,13 +453,20 @@ ${input.attributes?.size ? `Size: ${input.attributes.size}` : ''}
 2. Description: Write for CONVERSION and SEO - MUST describe BOTH product AND artwork
    - Length: ${spec.descMax ? `200-${spec.descMax} chars` : '200-2000 chars for best performance'}
    - Structure:
-     * Opening: Describe what the PRODUCT is AND what the DESIGN shows
-     * Features: Product-specific specs (size, material, construction) + artwork details (colors, theme, style)
-     * Use Cases: How/when to use this specific product type
-     * Trust signals: Quality assurance for this product category
-   - Example for sunset beach mug: "This ceramic coffee mug features a stunning vintage sunset beach design with warm orange and pink hues. The 11oz capacity is perfect for your morning coffee..."
-   - Include: Natural keyword variations, benefits, social proof, sizing/specifications
-   - Format: Short paragraphs (2-3 sentences), scannable, engaging
+     * Opening (CRITICAL): "This [PRODUCT] features [SPECIFIC DESIGN DESCRIPTION]"
+     * Features: Product specs + artwork details
+     * Use Cases: How/when to use
+     * Trust signals: Quality, guarantee, shipping
+
+   POD-SPECIFIC DESCRIPTION EXAMPLES:
+
+   ✅ T-Shirt: "This soft cotton t-shirt showcases a vintage-inspired sunset beach scene with warm coral and turquoise tones. The distressed graphic features silhouetted palm trees against an orange gradient sky, perfect for beach lovers and surf enthusiasts. Made from 100% ring-spun cotton with a classic crew neck and double-stitched hems for lasting durability. Available in sizes S-3XL, this unisex tee offers a comfortable, relaxed fit..."
+
+   ✅ Coffee Mug: "Start your morning with this 11oz ceramic mug featuring an adorable watercolor cat illustration in soft pastel pinks and grays. The whimsical design shows a fluffy Persian cat surrounded by delicate flowers, printed on both sides using high-quality, fade-resistant inks. Dishwasher and microwave safe for easy care. Perfect for cat lovers, artists, or anyone who appreciates cute, hand-drawn artwork with their morning coffee..."
+
+   ✅ Canvas Print: "Transform your space with this striking geometric mandala canvas print in deep navy and metallic gold tones. The intricate symmetrical pattern creates a mesmerizing focal point perfect for meditation rooms, yoga studios, or modern living spaces. Printed on premium cotton-poly blend canvas using archival inks that resist fading. Stretched over 1.5-inch solid wood stretcher bars and ready to hang..."
+
+   ❌ NEVER WRITE: "This product features a high-quality design. Perfect for gifting or everyday use. Durable construction ensures long-lasting wear..."
 
 3. Tags/Keywords: TARGET HIGH-VOLUME SEARCH TERMS
    ${spec.tagCount ? `- Exactly ${spec.tagCount} tags (max ${spec.tagMaxLength || 20} chars each)` : '- 10-15 relevant keywords'}
@@ -427,11 +477,44 @@ ${input.attributes?.size ? `Size: ${input.attributes.size}` : ''}
 
 ${spec.bulletCount ? `4. Bullet Points/Key Features: Exactly ${spec.bulletCount} PRODUCT-SPECIFIC bullets
    - MUST be relevant to the DETECTED PRODUCT TYPE you identified
-   - T-Shirt Example: "PREMIUM COMFORT - 100% soft cotton fabric, pre-shrunk for perfect fit"
-   - Mug Example: "DISHWASHER SAFE - Durable ceramic with heat-resistant coating for easy care"
-   - Canvas Example: "GALLERY QUALITY - Museum-grade canvas stretched on solid wood frame"
-   - Format: [Benefit specific to this product type] - [Supporting detail]
-   - Focus on: Features that matter for THIS specific product, not generic benefits` : ''}
+   - Format: [ALL CAPS BENEFIT] - [Specific detail about design OR product feature]
+   - ALWAYS include at least 1-2 bullets describing the ARTWORK/DESIGN
+
+   POD BULLET EXAMPLES BY PRODUCT TYPE:
+
+   T-SHIRT/APPAREL:
+   ✅ "UNIQUE DESIGN - Features a hand-drawn vintage compass rose in navy and gold metallic inks"
+   ✅ "PREMIUM COMFORT - 100% ring-spun cotton, pre-shrunk with soft-touch feel, double-stitched hems"
+   ✅ "PERFECT FIT - Unisex sizing runs true, relaxed fit ideal for layering or solo wear"
+   ✅ "VIBRANT COLORS - Eco-friendly water-based inks won't crack, peel, or fade after washing"
+   ✅ "SIZE RANGE - Available S-3XL to fit all body types comfortably"
+
+   MUG/DRINKWARE:
+   ✅ "CHARMING ARTWORK - Showcases watercolor floral wreath in blush pink and sage green tones"
+   ✅ "DISHWASHER SAFE - High-gloss ceramic with heat-resistant coating, microwave and top-rack safe"
+   ✅ "GENEROUS CAPACITY - Holds 11oz of your favorite hot or cold beverage"
+   ✅ "FADE-RESISTANT - Premium sublimation printing ensures design stays vibrant wash after wash"
+   ✅ "DUAL-SIDED - Beautiful design wraps around entire mug for 360° visual appeal"
+
+   CANVAS PRINT/WALL ART:
+   ✅ "STRIKING DESIGN - Bold geometric mountain landscape in teal, orange, and cream retro palette"
+   ✅ "MUSEUM QUALITY - Archival-grade canvas with fade-resistant professional inks"
+   ✅ "READY TO HANG - Stretched over 1.5\" solid pine stretcher bars, arrives ready for display"
+   ✅ "MULTIPLE SIZES - Choose from 12x16, 16x20, or 24x36 inches to fit your space"
+   ✅ "ARTIST COLLABORATION - Each print celebrates independent artists and modern design"
+
+   THROW PILLOW/HOME DECOR:
+   ✅ "EYE-CATCHING PATTERN - Abstract terrazzo design with pops of coral, navy, and mustard yellow"
+   ✅ "ULTRA SOFT - Plush polyester cover with hidden zipper, machine washable for easy care"
+   ✅ "PERFECT SIZE - 18x18 inch square fits standard pillow covers and furniture"
+   ✅ "FADE-RESISTANT - Vibrant dye-sublimation print on both sides resists fading and washing"
+   ✅ "VERSATILE STYLE - Modern boho aesthetic complements farmhouse, contemporary, or eclectic decor"
+
+   ❌ NEVER WRITE:
+   ❌ "HIGH QUALITY - Durable construction"
+   ❌ "GREAT GIFT - Perfect for any occasion"
+   ❌ "VERSATILE - Use anywhere"
+   ❌ "STYLISH DESIGN - Looks great"` : ''}
 
 ${spec.fields.includes('materials') ? `5. Materials: PRODUCT-TYPE SPECIFIC materials based on what you detected
    - T-Shirt/Apparel: "100% cotton", "polyester blend", "soft fabric", "ribbed collar"
