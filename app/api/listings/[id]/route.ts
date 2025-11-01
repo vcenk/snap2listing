@@ -78,16 +78,21 @@ export async function GET(
         ...(listing.base_data as Record<string, any>),
         images, // Add reconstructed images array
       },
-      channels: (listing.listing_channels as ListingChannelModel[]).map((lc: ListingChannelModel) => {
+      // Full channel metadata objects
+      channels: channels,
+      // Channel-specific overrides
+      channelOverrides: (listing.listing_channels as ListingChannelModel[]).map((lc: ListingChannelModel) => {
         const channel = channels.find(c => c.id === lc.channel_id);
+        const overrideData = lc.override_data as Record<string, any> || {};
         return {
           channelId: lc.channel_id,
           channelSlug: channel?.slug || '',
-          channelName: (channel as any)?.name || channel?.slug || '',
-          ...lc.override_data,
-          validationState: lc.validation_state,
-          readinessScore: lc.readiness_score,
-          isReady: lc.is_ready,
+          title: overrideData.title,
+          description: overrideData.description,
+          tags: overrideData.tags || [],
+          bullets: overrideData.bullets || overrideData.bullet_points || [],
+          materials: overrideData.materials || [],
+          customFields: overrideData.customFields || {},
         };
       }),
       seoScore: listing.seo_score,

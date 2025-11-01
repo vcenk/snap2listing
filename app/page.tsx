@@ -8,6 +8,7 @@ import { createTheme } from "@mui/material/styles";
 import Navbar from "@/components/Landing_Sections/Navbar";
 import Hero from "@/components/Landing_Sections/HeroSection";
 import LogoCarousel from "@/components/Landing_Sections/LogoCarousel";
+import ComparisonSection from "@/components/Landing_Sections/ComparisonSection";
 import Features from "@/components/Landing_Sections/FeaturesSection";
 import HowItWorks from "@/components/Landing_Sections/HowItWorksSection";
 import NeonPricing from "@/components/Pricing/NeonPricing";
@@ -44,6 +45,9 @@ export default function HomePage() {
 
         {/* Marketplace Logo Carousel */}
         <LogoCarousel />
+
+        {/* Comparison Section - Manual vs Snap2Listing */}
+        <ComparisonSection />
 
         {/* Features Section with cards and live preview */}
         <Features />

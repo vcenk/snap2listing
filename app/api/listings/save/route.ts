@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import type { ListingBase, ChannelOverride } from '@/lib/types/channels';
+import { calculateSEOScore } from '@/lib/utils/seo-calculator';
 
 /**
  * POST /api/listings/save
@@ -30,12 +31,16 @@ export async function POST(req: NextRequest) {
       status = 'draft',
       base,
       channels = [],
-      seoScore = 0,
+      seoScore: providedSeoScore,
       lastStep,
       lastChannelTab,
       scrollPosition = 0,
     } = body;
-    
+
+    // Calculate SEO score automatically based on listing content
+    const seoScore = calculateSEOScore(base, channels);
+    console.log('Calculated SEO score:', seoScore);
+
     // Ensure scrollPosition is an integer (convert from float if needed)
     const scrollPositionInt = Math.round(Number(scrollPosition) || 0);
 
@@ -180,6 +185,7 @@ export async function POST(req: NextRequest) {
             description: channel.description,
             tags: channel.tags || [],
             bullets: channel.bullets || [],
+            materials: channel.materials || [],
             customFields: channel.customFields || {},
           },
           validation_state: channel.validationState || {},

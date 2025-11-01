@@ -14,15 +14,23 @@ import {
   CircularProgress,
   Alert,
   AlertTitle,
+  Tabs,
+  Tab,
+  Divider,
+  Chip,
 } from '@mui/material';
 import { useState, useRef, useEffect } from 'react';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import ImageIcon from '@mui/icons-material/Image';
 import SmartDescriptionComposer from './SmartDescriptionComposer';
 import AIGenerationLoader from '@/components/common/AIGenerationLoader';
+import { useAuth } from '@/lib/auth/context';
 
 interface UploadStepProps {
   primaryChannelSlug?: string;
   selectedChannels?: string[]; // Channel slugs
+  productType?: 'physical' | 'digital'; // Product type to determine if we show generate option
   onNext: (data: {
     uploadedImage: string;
     uploadedImageName: string;
@@ -91,12 +99,19 @@ function priceSuggestion(slug?: string) {
   }
 }
 
-export default function UploadStep({ primaryChannelSlug, selectedChannels, onNext }: UploadStepProps) {
+export default function UploadStep({ primaryChannelSlug, selectedChannels, productType = 'physical', onNext }: UploadStepProps) {
+  const { user } = useAuth();
+  const [mode, setMode] = useState<'upload' | 'generate'>('upload'); // Upload or Generate mode for digital products
   const [uploadedImage, setUploadedImage] = useState<string>('');
   const [uploadedImageName, setUploadedImageName] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const descriptionRef = useRef<HTMLDivElement>(null);
+
+  // Image generation states (for digital products)
+  const [generatePrompt, setGeneratePrompt] = useState('');
+  const [negativePrompt, setNegativePrompt] = useState('blurry, watermark, text, low quality');
+  const [aspectRatio, setAspectRatio] = useState<string>('1:1');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,6 +123,54 @@ export default function UploadStep({ primaryChannelSlug, selectedChannels, onNex
         setUploadedImage(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Generate image from prompt (for digital products)
+  const handleGenerateImage = async () => {
+    if (!generatePrompt.trim()) {
+      alert('Please enter a prompt to generate an image');
+      return;
+    }
+
+    setIsGenerating(true);
+
+    // Scroll to top to show loader
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    try {
+      const response = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: generatePrompt,
+          negativePrompt,
+          upscale: false, // Default no upscale for first image
+          aspectRatio,
+          userId: user?.id,
+          productName: generatePrompt.split(',')[0], // Use first part of prompt as product name
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || 'Failed to generate image');
+      }
+
+      // Set the generated image
+      setUploadedImage(result.url);
+      setUploadedImageName('generated-image.jpg');
+
+      // Auto-set description from prompt
+      if (!shortDescription) {
+        setShortDescription(generatePrompt);
+      }
+    } catch (error) {
+      console.error('Error generating image:', error);
+      alert('Failed to generate image. Please try again.');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -185,40 +248,56 @@ export default function UploadStep({ primaryChannelSlug, selectedChannels, onNex
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={3}>
-        <Typography variant="h4">Upload Product Photo</Typography>
+        <Typography variant="h4">
+          {productType === 'digital' ? 'Upload or Generate Product Image' : 'Upload Product Photo'}
+        </Typography>
 
-        {/* Image Upload */}
-        <Paper
-          sx={{
-            p: 4,
-            textAlign: 'center',
-            border: '2px dashed',
-            borderColor: uploadedImage ? 'primary.main' : 'divider',
-            bgcolor: 'background.default',
-            cursor: 'pointer',
-            '&:hover': { borderColor: 'primary.main' },
-          }}
-          onClick={() => document.getElementById('file-upload')?.click()}
-        >
-          <input
-            id="file-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
-          {uploadedImage ? (
-            <Box>
-              <img
-                src={uploadedImage}
-                alt="Uploaded product"
-                style={{ maxWidth: '100%', maxHeight: 400, borderRadius: 14 }}
+        {/* Mode Selector - Only for Digital Products */}
+        {productType === 'digital' && !uploadedImage && (
+          <Paper sx={{ p: 2 }}>
+            <Tabs
+              value={mode}
+              onChange={(e, newValue) => setMode(newValue)}
+              variant="fullWidth"
+              sx={{ mb: 2 }}
+            >
+              <Tab
+                icon={<CloudUploadIcon />}
+                iconPosition="start"
+                label="Upload Image"
+                value="upload"
               />
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-                {uploadedImageName}
-              </Typography>
-            </Box>
-          ) : (
+              <Tab
+                icon={<AutoFixHighIcon />}
+                iconPosition="start"
+                label="Generate with AI"
+                value="generate"
+              />
+            </Tabs>
+          </Paper>
+        )}
+
+        {/* Upload Mode */}
+        {(mode === 'upload' || productType === 'physical') && !uploadedImage && (
+          <Paper
+            sx={{
+              p: 4,
+              textAlign: 'center',
+              border: '2px dashed',
+              borderColor: 'divider',
+              bgcolor: 'background.default',
+              cursor: 'pointer',
+              '&:hover': { borderColor: 'primary.main' },
+            }}
+            onClick={() => document.getElementById('file-upload')?.click()}
+          >
+            <input
+              id="file-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
             <Stack spacing={2} alignItems="center">
               <CloudUploadIcon sx={{ fontSize: 60, color: 'text.secondary' }} />
               <Typography variant="h5">
@@ -228,8 +307,101 @@ export default function UploadStep({ primaryChannelSlug, selectedChannels, onNex
                 PNG, JPG up to 10MB
               </Typography>
             </Stack>
-          )}
-        </Paper>
+          </Paper>
+        )}
+
+        {/* Generate Mode - Only for Digital Products */}
+        {mode === 'generate' && productType === 'digital' && !uploadedImage && (
+          <Paper sx={{ p: 4, bgcolor: 'background.default' }}>
+            <Stack spacing={3}>
+              <Alert severity="info" icon={<AutoFixHighIcon />}>
+                <AlertTitle>Generate Your Product Image with AI</AlertTitle>
+                Describe what you want to create, and AI will generate a professional product image for you.
+              </Alert>
+
+              <TextField
+                multiline
+                rows={3}
+                label="Image Generation Prompt"
+                placeholder="Example: professional photo of wireless bluetooth headphones, white background, studio lighting, 4k quality"
+                value={generatePrompt}
+                onChange={(e) => setGeneratePrompt(e.target.value)}
+                fullWidth
+              />
+
+              <TextField
+                label="Negative Prompt (optional)"
+                placeholder="blurry, watermark, text, low quality"
+                value={negativePrompt}
+                onChange={(e) => setNegativePrompt(e.target.value)}
+                fullWidth
+              />
+
+              <FormControl fullWidth>
+                <InputLabel>Aspect Ratio</InputLabel>
+                <Select
+                  value={aspectRatio}
+                  label="Aspect Ratio"
+                  onChange={(e) => setAspectRatio(e.target.value)}
+                >
+                  <MenuItem value="1:1">1:1 (Square) - 1024×1024</MenuItem>
+                  <MenuItem value="4:3">4:3 - 1152×896</MenuItem>
+                  <MenuItem value="16:9">16:9 (Landscape) - 1344×768</MenuItem>
+                  <MenuItem value="3:4">3:4 (Portrait) - 896×1152</MenuItem>
+                  <MenuItem value="9:16">9:16 (Vertical) - 768×1344</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Button
+                variant="contained"
+                onClick={handleGenerateImage}
+                disabled={isGenerating || !generatePrompt.trim()}
+                size="large"
+                startIcon={isGenerating ? <CircularProgress size={20} color="inherit" /> : <AutoFixHighIcon />}
+              >
+                {isGenerating ? 'Generating...' : 'Generate Image'}
+              </Button>
+            </Stack>
+          </Paper>
+        )}
+
+        {/* Show Generated/Uploaded Image */}
+        {uploadedImage && (
+          <Paper
+            sx={{
+              p: 4,
+              textAlign: 'center',
+              border: '2px solid',
+              borderColor: 'primary.main',
+              bgcolor: 'background.default',
+            }}
+          >
+            <Box>
+              <img
+                src={uploadedImage}
+                alt="Product"
+                style={{ maxWidth: '100%', maxHeight: 400, borderRadius: 14 }}
+              />
+              <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" sx={{ mt: 2 }}>
+                <Chip
+                  icon={mode === 'generate' ? <AutoFixHighIcon /> : <ImageIcon />}
+                  label={mode === 'generate' ? 'AI Generated' : uploadedImageName}
+                  color="primary"
+                  variant="outlined"
+                />
+                <Button
+                  size="small"
+                  onClick={() => {
+                    setUploadedImage('');
+                    setUploadedImageName('');
+                  }}
+                >
+                  Change Image
+                </Button>
+              </Stack>
+            </Box>
+          </Paper>
+        )}
 
 
         {/* Smart Description Composer - Only show after image upload */}

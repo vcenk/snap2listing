@@ -21,18 +21,17 @@ import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import FacebookIcon from '@mui/icons-material/Facebook';
 import GoogleIcon from '@mui/icons-material/Google';
-import TwitterIcon from '@mui/icons-material/Twitter';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -47,6 +46,19 @@ export default function LoginPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    setGoogleLoading(true);
+
+    try {
+      await signInWithGoogle();
+      // OAuth will redirect to /app/overview
+    } catch (err: any) {
+      setError(err.message);
+      setGoogleLoading(false);
     }
   };
 
@@ -149,6 +161,53 @@ export default function LoginPage() {
             </Alert>
           )}
 
+          {/* Google Sign In Button */}
+          <Button
+            onClick={handleGoogleLogin}
+            variant="contained"
+            size="large"
+            fullWidth
+            disabled={googleLoading || loading}
+            startIcon={<GoogleIcon />}
+            sx={{
+              py: 2,
+              borderRadius: 2,
+              fontWeight: 700,
+              fontSize: '1rem',
+              textTransform: 'none',
+              background: '#fff',
+              color: '#757575',
+              border: '2px solid #E0E0E0',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                background: '#f8f9fa',
+                borderColor: '#DB4437',
+                boxShadow: '0 4px 12px rgba(219, 68, 55, 0.2)',
+                transform: 'translateY(-2px)',
+              },
+              '&:disabled': {
+                background: '#f5f5f5',
+                color: '#bdbdbd',
+              },
+            }}
+          >
+            {googleLoading ? (
+              <>
+                <CircularProgress size={20} sx={{ mr: 1, color: '#757575' }} />
+                Signing in with Google...
+              </>
+            ) : (
+              'Continue with Google'
+            )}
+          </Button>
+
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              or continue with email
+            </Typography>
+          </Divider>
+
           {/* Login Form */}
           <form onSubmit={handleLogin}>
             <Stack spacing={2.5}>
@@ -160,7 +219,7 @@ export default function LoginPage() {
                 fullWidth
                 required
                 autoComplete="email"
-                disabled={loading}
+                disabled={loading || googleLoading}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -190,7 +249,7 @@ export default function LoginPage() {
                 fullWidth
                 required
                 autoComplete="current-password"
-                disabled={loading}
+                disabled={loading || googleLoading}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -242,7 +301,7 @@ export default function LoginPage() {
                 variant="contained"
                 size="large"
                 fullWidth
-                disabled={loading}
+                disabled={loading || googleLoading}
                 sx={{
                   py: 1.75,
                   borderRadius: 2,
@@ -271,61 +330,6 @@ export default function LoginPage() {
               </Button>
             </Stack>
           </form>
-
-          <Divider sx={{ my: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              or continue with
-            </Typography>
-          </Divider>
-
-          {/* Social Login Buttons */}
-          <Stack direction="row" spacing={2} justifyContent="center">
-            <IconButton
-              sx={{
-                width: 50,
-                height: 50,
-                border: '2px solid #F3F4F6',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  borderColor: '#3b5998',
-                  backgroundColor: 'rgba(59, 89, 152, 0.05)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <FacebookIcon sx={{ color: '#3b5998', fontSize: 24 }} />
-            </IconButton>
-            <IconButton
-              sx={{
-                width: 50,
-                height: 50,
-                border: '2px solid #F3F4F6',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  borderColor: '#DB4437',
-                  backgroundColor: 'rgba(219, 68, 55, 0.05)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <GoogleIcon sx={{ color: '#DB4437', fontSize: 24 }} />
-            </IconButton>
-            <IconButton
-              sx={{
-                width: 50,
-                height: 50,
-                border: '2px solid #F3F4F6',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  borderColor: '#1DA1F2',
-                  backgroundColor: 'rgba(29, 161, 242, 0.05)',
-                  transform: 'translateY(-2px)',
-                },
-              }}
-            >
-              <TwitterIcon sx={{ color: '#1DA1F2', fontSize: 24 }} />
-            </IconButton>
-          </Stack>
 
           {/* Sign Up Link */}
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ mt: 2 }}>

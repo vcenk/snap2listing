@@ -47,7 +47,11 @@
       "Bash(xargs kill -9)",
       "Bash(rm:*)",
       "WebFetch(domain:docs.dynamicmockups.com)",
-      "WebFetch(domain:www.listybox.com)"
+      "WebFetch(domain:www.listybox.com)",
+      "Bash(npx tsc:*)",
+      "Bash(cat:*)",
+      "Bash(findstr:*)",
+      "Bash(npx supabase:*)"
     ],
     "deny": [],
     "ask": []

@@ -48,13 +48,15 @@ export default function TermsOfServicePage() {
                 2. Description of Service
               </Typography>
               <Typography variant="body1" paragraph>
-                Snap2Listing is an AI-powered platform that helps Etsy sellers create professional product listings, including:
+                Snap2Listing is an AI-powered multi-channel listing generator that helps online sellers create professional product listings, including:
               </Typography>
               <Typography variant="body1" component="ul" sx={{ pl: 4 }}>
-                <li>AI-generated product images</li>
+                <li>AI-generated product mockups for print-on-demand items</li>
+                <li>AI-generated product images and lifestyle photos</li>
                 <li>AI-generated product videos</li>
-                <li>SEO-optimized titles, tags, and descriptions</li>
-                <li>Direct publishing to Etsy shops</li>
+                <li>SEO-optimized titles, tags, descriptions, and key features</li>
+                <li>Channel-specific content for Etsy, Shopify, Amazon, eBay, TikTok Shop, and more</li>
+                <li>Export packages with formatted Word documents and CSV files</li>
               </Typography>
             </Box>
 
@@ -120,9 +122,11 @@ export default function TermsOfServicePage() {
                 Each subscription plan includes specific usage limits for:
               </Typography>
               <Typography variant="body1" component="ul" sx={{ pl: 4 }}>
+                <li>Number of listings created per month</li>
+                <li>Number of mockups generated per month</li>
                 <li>Number of images generated per month</li>
                 <li>Number of videos created per month</li>
-                <li>Number of connected Etsy shops</li>
+                <li>Number of marketplace channels supported</li>
               </Typography>
               <Typography variant="body1" paragraph>
                 Exceeding these limits requires upgrading your plan or purchasing add-ons.
@@ -170,27 +174,30 @@ export default function TermsOfServicePage() {
               </Typography>
               <Typography variant="body1" component="ul" sx={{ pl: 4 }}>
                 <li>Use the Service for any illegal or unauthorized purpose</li>
-                <li>Generate content that violates Etsy&apos;s policies</li>
-                <li>Upload images you don&apos;t have rights to use</li>
-                <li>Attempt to reverse engineer or copy our Service</li>
+                <li>Generate content that violates marketplace policies or regulations</li>
+                <li>Upload images you don&apos;t have legal rights to use</li>
+                <li>Attempt to reverse engineer, copy, or replicate our Service</li>
                 <li>Share your account credentials with others</li>
-                <li>Use automated tools to abuse the Service</li>
-                <li>Generate offensive, harmful, or misleading content</li>
+                <li>Use automated tools or scripts to abuse the Service</li>
+                <li>Generate offensive, harmful, misleading, or fraudulent content</li>
+                <li>Infringe on intellectual property rights of others</li>
               </Typography>
             </Box>
 
             <Box>
               <Typography variant="h4" gutterBottom>
-                8. Etsy Integration
+                8. Marketplace Integration
               </Typography>
               <Typography variant="body1" paragraph>
-                Our Service integrates with Etsy&apos;s API. By connecting your Etsy shop:
+                Our Service integrates with various marketplace platforms (Etsy, Shopify, Amazon, eBay, TikTok Shop, etc.). By connecting your marketplace accounts:
               </Typography>
               <Typography variant="body1" component="ul" sx={{ pl: 4 }}>
-                <li>You authorize us to publish listings on your behalf</li>
-                <li>You remain responsible for all listings published to Etsy</li>
-                <li>You must comply with all Etsy policies and terms</li>
-                <li>We are not liable for issues with Etsy&apos;s platform</li>
+                <li>You authorize us to access your account data via official APIs</li>
+                <li>You authorize us to export/publish listings on your behalf (where applicable)</li>
+                <li>You remain fully responsible for all listings and content published to any marketplace</li>
+                <li>You must comply with all policies and terms of each marketplace platform</li>
+                <li>We are not liable for issues with third-party marketplace platforms</li>
+                <li>You may disconnect your marketplace accounts at any time</li>
               </Typography>
             </Box>
 
@@ -296,7 +303,7 @@ export default function TermsOfServicePage() {
                 For questions about these Terms, please contact us at:
               </Typography>
               <Typography variant="body1">
-                Email: support@snap2listing.com
+                Email: snap2listing@gmail.com
               </Typography>
             </Box>
 

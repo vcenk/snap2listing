@@ -143,8 +143,8 @@ export default function PricingTable({ onSelectPlan, showYearlyToggle = true }: 
                 {/* Features */}
                 <List dense sx={{ pt: 1 }}>
                   {plan.features.map((feature, index) => (
-                    <ListItem key={index} sx={{ px: 0, py: 0.5 }}>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
+                    <ListItem key={index} sx={{ px: 0, py: 0.5, alignItems: 'flex-start' }}>
+                      <ListItemIcon sx={{ minWidth: 32, mt: 0.5 }}>
                         <CheckCircleIcon sx={{ fontSize: 18, color: plan.color }} />
                       </ListItemIcon>
                       <ListItemText
@@ -152,8 +152,10 @@ export default function PricingTable({ onSelectPlan, showYearlyToggle = true }: 
                         primaryTypographyProps={{
                           variant: 'body2',
                           sx: {
-                            fontWeight: feature.includes('Unlimited') ? 700 : 400,
+                            fontWeight: feature.includes('Unlimited') || feature.includes('✨') || feature.includes('FREE') || feature.includes('Everything in') ? 700 : 400,
                             fontSize: '0.9rem',
+                            lineHeight: 1.5,
+                            color: feature.includes('✨') || feature.includes('FREE') ? 'success.main' : 'text.primary',
                           },
                         }}
                       />

@@ -103,7 +103,6 @@ export default function FooterSection() {
                 { name: "About", href: "/about" },
                 { name: "Contact", href: "/contact" },
                 { name: "Blog", href: "/blog" },
-                { name: "Careers", href: "/careers" },
               ].map((link) => (
                 <Link key={link.name} href={link.href} style={{ textDecoration: "none" }}>
                   <Typography
@@ -131,7 +130,7 @@ export default function FooterSection() {
               {[
                 { name: "Privacy Policy", href: "/privacy" },
                 { name: "Terms of Service", href: "/terms" },
-                { name: "Cookie Policy", href: "/cookies" },
+                { name: "Cookie Policy", href: "/cookie-policy" },
               ].map((link) => (
                 <Link key={link.name} href={link.href} style={{ textDecoration: "none" }}>
                   <Typography
@@ -159,7 +158,6 @@ export default function FooterSection() {
               {[
                 { name: "Help Center", href: "/help" },
                 { name: "Contact Us", href: "/contact" },
-                { name: "System Status", href: "/status" },
               ].map((link) => (
                 <Link key={link.name} href={link.href} style={{ textDecoration: "none" }}>
                   <Typography

@@ -9,7 +9,14 @@ export default function NeonPricing() {
       subtitle: "FREE",
       price: 0,
       gradient: "linear-gradient(135deg,#8ea6ff 0%,#89e3e0 100%)", // blue → aqua
-      details: ["AI titles, descriptions, tags", "15 images / month", "Manual export"],
+      details: [
+        "15 credits • 7-day trial",
+        "1 complete listing",
+        "✨ Unlimited SEO content",
+        "Full dashboard access",
+        "All 6 marketplaces",
+        "HD watermark-free exports",
+      ],
       cta: { label: "Try Free", href: "/signup" },
     },
     {
@@ -18,7 +25,16 @@ export default function NeonPricing() {
       subtitle: "STARTER",
       price: 19,
       gradient: "linear-gradient(135deg,#ff5f6d 0%,#ffc371 100%)", // coral → peach
-      details: ["AI text + Etsy SEO", "100 images / 2 videos (15s)", "1-click publish to Etsy"],
+      details: [
+        "☕ Just 3 coffee cups/month",
+        "300 credits/month",
+        "33 complete listings",
+        "✨ Unlimited SEO (all marketplaces)",
+        "1,000+ mockup templates",
+        "AI prompt suggestions",
+        "ZIP & CSV export",
+        "1 Brand Kit",
+      ],
       cta: { label: "Start Automating", href: "/signup" },
     },
     {
@@ -27,7 +43,16 @@ export default function NeonPricing() {
       subtitle: "PRO",
       price: 39,
       gradient: "linear-gradient(135deg,#6366f1 0%,#3b82f6 100%)", // indigo → blue
-      details: ["AI text + real-time SEO scoring", "250 images / 5 videos (15s)", "Bulk draft + scheduling"],
+      details: [
+        "750 credits/month",
+        "83 complete listings",
+        "✨ Unlimited SEO + AI text",
+        "Multi-marketplace optimization",
+        "A/B testing & analytics",
+        "Priority generation queue",
+        "3 Brand Kits",
+        "Email support (24h)",
+      ],
       cta: { label: "Go Pro", href: "/signup" },
     },
     {
@@ -36,7 +61,16 @@ export default function NeonPricing() {
       subtitle: "BUSINESS",
       price: 79,
       gradient: "linear-gradient(135deg,#16a34a 0%,#06b6d4 100%)", // green → teal
-      details: ["Brand voice memory + analytics", "600 images / 15 videos (30s)", "Multi-shop & bulk publish"],
+      details: [
+        "1,800 credits/month",
+        "200 complete listings",
+        "✨ Everything in Pro +",
+        "Unlimited Brand Kits",
+        "5 Team Seats",
+        "Shared brand assets",
+        "Version history",
+        "Dedicated support (4h)",
+      ],
       cta: { label: "Scale Your Shop", href: "/contact" },
     },
   ];

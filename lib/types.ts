@@ -184,11 +184,15 @@ export interface User {
   planId: string;
   subscriptionStatus: 'active' | 'canceled' | 'past_due' | 'trialing';
 
-  // Usage tracking (current billing period)
-  imagesUsed: number;
-  videosUsed: number;
+  // Credit-based usage tracking (current billing period)
+  creditsUsed: number;
+  creditsLimit: number;
   billingPeriodStart: string;
   billingPeriodEnd: string;
+
+  // Legacy usage tracking (for backwards compatibility - can be removed later)
+  imagesUsed?: number;
+  videosUsed?: number;
 
   // Metadata
   createdAt: string;
@@ -196,14 +200,28 @@ export interface User {
 }
 
 export interface UsageStats {
-  imagesUsed: number;
-  imagesLimit: number;
-  videosUsed: number;
-  videosLimit: number;
+  // Credit-based usage
+  creditsUsed: number;
+  creditsLimit: number;
+  creditsRemaining: number;
+  percentageUsed: number;
+
+  // Legacy usage (for backwards compatibility)
+  imagesUsed?: number;
+  imagesLimit?: number;
+  videosUsed?: number;
+  videosLimit?: number;
+
+  // Counts
   listingsCount: number;
   publishedCount: number;
   shopsCount: number;
   currentPlan: string;
+
+  // Trial information (for free plan)
+  trialDaysRemaining?: number;
+  trialExpired?: boolean;
+  accountCreatedAt?: string;
 }
 
 // API Response types

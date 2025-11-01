@@ -18,7 +18,7 @@ export const dynamicMockupsConfig = {
   // This is accessed via process.env.DYNAMIC_MOCKUPS_API_KEY in server-side code only
 
   iframeId: 'dm-iframe',
-  mode: 'custom' as const, // Changed from 'download' to 'custom' for callback support
+  mode: 'custom' as const, // Use 'custom' mode to capture URLs without triggering downloads
   apiUrl: process.env.DYNAMIC_MOCKUPS_API_URL || 'https://api.dynamic-mockups.com',
 };
 

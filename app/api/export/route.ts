@@ -7,16 +7,19 @@ import { AmazonChecker } from '@/lib/exporters/amazon-checker';
 import { BaseExporter } from '@/lib/exporters/base-exporter';
 import { channelModelToChannel, listingModelToListingData, listingChannelModelToOverride } from '@/lib/types/channels';
 import type { ChannelModel, ListingModel, ListingChannelModel, ListingImageModel } from '@/lib/types/channels';
+import { generatePackageExport, generateWordDocument } from '@/lib/exporters/package-exporter';
+import { Packer } from 'docx';
 
 /**
  * POST /api/export
  * Generate export file for a specific channel
+ * Supports multiple formats: csv, word, package (zip)
  */
 export async function POST(req: NextRequest) {
   try {
-    const { listingId, channelId } = await req.json();
+    const { listingId, channelId, format = 'csv' } = await req.json();
 
-    console.log('Export request:', { listingId, channelId });
+    console.log('Export request:', { listingId, channelId, format });
 
     // Validation
     if (!listingId || !channelId) {
@@ -153,7 +156,7 @@ export async function POST(req: NextRequest) {
     // Validate before export
     const validation = exporter.validate(listing, channel);
     console.log('Validation result:', validation);
-    
+
     if (!validation.isReady) {
       return NextResponse.json(
         {
@@ -170,8 +173,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate export file
-    const exportFile = await exporter.generate(listing, channel);
+    // Generate export based on selected format
+    let exportFile: any;
+
+    if (format === 'package' || format === 'zip') {
+      // Generate comprehensive ZIP package (Word + Images + CSV)
+      const csvExport = await exporter.generate(listing, channel);
+      const csvContent = typeof csvExport.content === 'string' ? csvExport.content : Buffer.from(csvExport.content).toString('utf-8');
+      exportFile = await generatePackageExport(listing, channel, csvContent);
+    } else if (format === 'word' || format === 'docx') {
+      // Generate standalone Word document with embedded images
+      const wordDoc = await generateWordDocument(listing, channel);
+      const wordBuffer = await Packer.toBuffer(wordDoc);
+      const wordBase64 = Buffer.from(wordBuffer).toString('base64');
+
+      exportFile = {
+        content: wordBase64,
+        fileName: `${listing.base.title}_${channel.name}.docx`.replace(/[^a-z0-9.-]/gi, '_'),
+        contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      };
+    } else {
+      // Default: CSV/TXT format
+      exportFile = await exporter.generate(listing, channel);
+    }
 
     // Validate export file
     if (!exportFile || !exportFile.content) {

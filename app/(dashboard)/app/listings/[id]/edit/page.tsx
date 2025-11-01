@@ -5,42 +5,15 @@ import { useParams, useRouter } from 'next/navigation';
 import { Box, CircularProgress, Typography, Alert } from '@mui/material';
 import { useAuth } from '@/lib/auth/context';
 import { useToast } from '@/lib/contexts/ToastContext';
-import ListingWizard from '@/components/CreateListing/EditListingWizard';
-
-interface Listing {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  price: number;
-  tags: string[];
-  category: string;
-  images: any[];
-  video?: any;
-  original_image: string;
-  quantity: number;
-  materials: string[];
-  occasion?: string[];
-  holiday?: string[];
-  recipient?: string[];
-  style?: string[];
-  category_id?: number;
-  who_made?: string;
-  when_made?: string;
-  is_customizable?: boolean;
-  personalization_instructions?: string;
-  personalization_char_limit?: number;
-  processing_min?: number;
-  processing_max?: number;
-  status: string;
-}
+import ListingWizard from '@/components/CreateListing/ListingWizard';
+import type { ListingData } from '@/lib/types/channels';
 
 export default function EditListingPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const toast = useToast();
-  const [listing, setListing] = useState<Listing | null>(null);
+  const [listing, setListing] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -68,6 +41,8 @@ export default function EditListingPage() {
       }
 
       const data = await response.json();
+
+      // API now returns data in the correct format with channels and channelOverrides separated
       setListing(data.listing);
       // Restore scroll position if present
       if (typeof window !== 'undefined' && data.listing?.scrollPosition) {

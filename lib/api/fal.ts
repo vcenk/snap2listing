@@ -54,15 +54,15 @@ export interface GenerateVideoOutput {
 }
 
 /**
- * Generate an image using FAL.ai FLUX Pro Kontext model
- * Supports both text-to-image and image-to-image generation
+ * Generate an image using FAL.ai FLUX models
+ * - Text-to-image: Uses FLUX Pro for generation from scratch
+ * - Image-to-image: Uses FLUX Pro Kontext for context-aware editing
  */
 export async function generateImage(input: GenerateImageInput): Promise<GenerateImageOutput> {
   try {
     const requestInput: any = {
       prompt: input.prompt,
       num_images: input.numImages || 1,
-      aspect_ratio: input.aspectRatio || '1:1',
       safety_tolerance: input.safetyTolerance || '2',
     };
 
@@ -75,17 +75,44 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
       requestInput.seed = input.seed;
     }
 
-    // Image-to-image mode: add input image and strength
+    // Determine which model to use
+    let modelEndpoint: string;
+
     if (input.inputImageUrl) {
+      // Image-to-image mode: Use FLUX Pro Kontext (requires image_url)
+      modelEndpoint = 'fal-ai/flux-pro/kontext';
       requestInput.image_url = input.inputImageUrl;
-      // Enforce high adherence to the uploaded image to avoid subject drift
-      const strength = input.imagePromptStrength !== undefined ? input.imagePromptStrength : 0.97;
-      requestInput.image_prompt_strength = Math.max(Math.min(strength, 1), 0.9);
-      // Strengthen the prompt to explicitly require using the uploaded image as-is
-      requestInput.prompt = `Use the uploaded image exactly as the subject. Do not replace, redraw, or alter the subject identity, pose, or design. Only adjust background/lighting/style as described. ${input.prompt}`.trim();
+      requestInput.aspect_ratio = input.aspectRatio || '1:1';
+
+      // MAXIMUM adherence to preserve the product exactly as uploaded
+      // Use the highest possible strength (0.95-0.99) to prevent ANY product modifications
+      const strength = input.imagePromptStrength !== undefined ? input.imagePromptStrength : 0.99;
+      requestInput.image_prompt_strength = Math.max(Math.min(strength, 0.99), 0.95);
+
+      // Strengthen the prompt with explicit preservation instructions
+      requestInput.prompt = `IMPORTANT: Keep the exact same product/subject from the uploaded image. Do not modify its design, colors, shape, size, or any visual characteristics. The product must remain 100% identical. ${input.prompt}. Only modify: background, lighting, camera angle, or presentation style.`.trim();
+    } else {
+      // Text-to-image mode: Use FLUX Pro (doesn't accept image_url)
+      modelEndpoint = 'fal-ai/flux-pro';
+      // FLUX Pro uses image_size instead of aspect_ratio
+      const aspectRatio = input.aspectRatio || '1:1';
+      const sizeMap: Record<string, { width: number; height: number }> = {
+        '1:1': { width: 1024, height: 1024 },
+        '16:9': { width: 1344, height: 768 },
+        '9:16': { width: 768, height: 1344 },
+        '4:3': { width: 1152, height: 896 },
+        '3:4': { width: 896, height: 1152 },
+        '21:9': { width: 1536, height: 640 },
+        '9:21': { width: 640, height: 1536 },
+      };
+      const size = sizeMap[aspectRatio] || sizeMap['1:1'];
+      requestInput.image_size = size;
     }
 
-    const result = await fal.subscribe('fal-ai/flux-pro/kontext', {
+    console.log('FAL.ai model:', modelEndpoint);
+    console.log('FAL.ai request params:', JSON.stringify(requestInput, null, 2));
+
+    const result = await fal.subscribe(modelEndpoint, {
       input: requestInput,
       logs: true,
       onQueueUpdate: (update) => {
@@ -96,9 +123,16 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
     });
 
     return result as GenerateImageOutput;
-  } catch (error) {
+  } catch (error: any) {
     console.error('FAL.ai image generation error:', error);
-    throw new Error('Failed to generate image');
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    if (error.body) {
+      console.error('Error body:', JSON.stringify(error.body, null, 2));
+    }
+    if (error.body?.detail) {
+      console.error('Validation errors:', JSON.stringify(error.body.detail, null, 2));
+    }
+    throw new Error('Failed to generate image: ' + (error.message || JSON.stringify(error.body?.detail || error)));
   }
 }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { getPlanById, PLANS } from '@/config/pricing';
+import { getPlanById, PLANS, checkCreditLimits, calculateCreditBreakdown, getTrialDaysRemaining, isTrialExpired } from '@/config/pricing';
 
 // Mark this route as dynamic
 export const dynamic = 'force-dynamic';
@@ -52,18 +52,46 @@ export async function GET(request: NextRequest) {
 
     // Get plan limits from pricing config
     const plan = getPlanById(user.plan_id || 'free') || PLANS[0];
-    const limits = { images: plan.images, videos: plan.videos };
+
+    // Credit-based tracking (primary)
+    const creditsUsed = user.credits_used ?? 0;
+    const creditsLimit = user.credits_limit ?? plan.credits ?? 10;
+    const creditLimits = checkCreditLimits(plan, creditsUsed);
+    const creditBreakdown = calculateCreditBreakdown(creditLimits.creditsRemaining);
+
+    // Trial information (for free users)
+    const accountCreatedAt = user.account_created_at ? new Date(user.account_created_at) : new Date(user.created_at);
+    const trialDaysRemaining = plan.id === 'free' ? getTrialDaysRemaining(accountCreatedAt, plan) : 0;
+    const trialExpired = plan.id === 'free' ? isTrialExpired(accountCreatedAt, plan) : false;
 
     const stats = {
+      // Credit-based stats (primary)
+      creditsUsed,
+      creditsLimit,
+      creditsRemaining: creditLimits.creditsRemaining,
+      percentageUsed: creditLimits.percentageUsed,
+      creditBreakdown,
+
+      // Legacy stats (for backwards compatibility)
       imagesUsed: user.images_used || 0,
-      imagesLimit: limits.images,
+      imagesLimit: plan.images || 0,
       videosUsed: user.videos_used || 0,
-      videosLimit: limits.videos,
+      videosLimit: plan.videos || 0,
+
+      // Counts
       listingsCount: totalListings || 0,
       publishedCount: publishedCount || 0,
       channelsCount: channelsCount || 0,
+
+      // Plan info
       currentPlan: user.plan_id,
+      planName: plan.name,
       subscriptionStatus: user.subscription_status,
+
+      // Trial info (for free users)
+      trialDaysRemaining,
+      trialExpired,
+      accountCreatedAt: accountCreatedAt.toISOString(),
     };
 
     return NextResponse.json({ stats });

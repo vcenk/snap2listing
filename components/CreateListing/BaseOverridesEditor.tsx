@@ -317,7 +317,10 @@ export default function BaseOverridesEditor({
             </Stack>
 
             <Divider sx={{ my: 3 }}>
-              <Chip label="SEO Brain" />
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Chip label="SEO Brain" />
+                <Chip label="✨ FREE (Unlimited)" size="small" color="success" />
+              </Stack>
             </Divider>
             <KeywordPanel
               title={baseData.title}
@@ -375,6 +378,11 @@ export default function BaseOverridesEditor({
                 </Box>
 
                 <Box>
+                  <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      Title Override (FREE ✨)
+                    </Typography>
+                  </Stack>
                   <TextField
                   label={`Title Override (${activeChannel?.validationRules.title?.maxLength ? `max ${activeChannel.validationRules.title.maxLength}` : 'unlimited'})`}
                   fullWidth
@@ -383,13 +391,18 @@ export default function BaseOverridesEditor({
                   placeholder={baseData.title}
                   helperText={
                     activeOverride?.title
-                      ? `${activeOverride.title.length} characters (override active)`
-                      : 'Using base title'
+                      ? `${activeOverride.title.length} characters (override active) • No credits used`
+                      : 'Using base title • No credits used'
                   }
                 />
               </Box>
 
               <Box>
+                  <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      Description Override (FREE ✨)
+                    </Typography>
+                  </Stack>
                 <TextField
                   label="Description Override"
                   fullWidth
@@ -400,14 +413,19 @@ export default function BaseOverridesEditor({
                   placeholder={baseData.description}
                   helperText={
                     activeOverride?.description
-                      ? `${activeOverride.description.length} characters (override active)`
-                      : 'Using base description'
+                      ? `${activeOverride.description.length} characters (override active) • No credits used`
+                      : 'Using base description • No credits used'
                   }
                 />
               </Box>
 
               {activeChannel?.validationRules.tags && (
                 <Box>
+                  <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      Tags (FREE ✨)
+                    </Typography>
+                  </Stack>
                   <TextField
                     label={`Tags (${activeChannel.validationRules.tags.min || 0}-${activeChannel.validationRules.tags.max || '∞'} tags)`}
                     fullWidth
@@ -419,7 +437,7 @@ export default function BaseOverridesEditor({
                       )
                     }
                     placeholder="tag1, tag2, tag3"
-                    helperText={`${(activeOverride?.tags || []).length} tags entered`}
+                    helperText={`${(activeOverride?.tags || []).length} tags entered • No credits used`}
                   />
                 </Box>
               )}

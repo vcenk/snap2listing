@@ -7,6 +7,7 @@ import {
   Stack,
   Button,
   Alert,
+  AlertTitle,
   Chip,
   Grid,
   Card,
@@ -32,6 +33,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
+import ImageIcon from '@mui/icons-material/Image';
 import { GeneratedImage } from '@/lib/types';
 import UpgradeModal from '@/components/common/UpgradeModal';
 import { useAuth } from '@/lib/auth/context';
@@ -45,16 +47,18 @@ interface ImagesStepProps {
   onBack: () => void;
 }
 
+// Important: These prompts focus on CHANGING ONLY background/lighting/angle
+// The product itself must remain EXACTLY the same as uploaded
 const SUGGESTED_PROMPTS = [
-  'professional product photo of [PRODUCT], front view, white background, studio lighting, high quality, 4k',
-  '[PRODUCT] at 45 degree angle, showing details, white background, natural lighting',
-  'top-down flat lay of [PRODUCT], overhead view, white background, clean composition',
-  'extreme close-up of [PRODUCT] texture and details, macro photography',
-  '[PRODUCT] in lifestyle setting, being used naturally, warm lighting',
-  '[PRODUCT] with size reference, scale comparison, white background',
-  '[PRODUCT] packaged for gift, elegant presentation',
-  'artistic angle of [PRODUCT], creative composition',
-  '[PRODUCT] in styled scene with props, instagram aesthetic',
+  'same product, white background, professional studio lighting, front view',
+  'same product, 45 degree angle view, white background, soft natural lighting',
+  'same product, overhead flat lay view, clean white background',
+  'same product, close-up detail shot, showing texture, neutral background',
+  'same product, lifestyle setting background, warm ambient lighting',
+  'same product, with props for scale, white background, clean presentation',
+  'same product, elegant gift presentation styling, soft lighting',
+  'same product, creative angle, artistic lighting, minimal background',
+  'same product, instagram-style setting, modern aesthetic background',
 ];
 
 const QUICK_ADD_PROMPTS = [
@@ -70,7 +74,8 @@ export default function ImagesStep({ originalImage, productName, productType: in
   const [images, setImages] = useState<GeneratedImage[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [prompt, setPrompt] = useState('');
-  const [negativePrompt, setNegativePrompt] = useState('blurry, watermark, text, low quality');
+  // Strong negative prompt to prevent ANY changes to the product itself
+  const [negativePrompt, setNegativePrompt] = useState('changing product, different product, modified product, altered design, new product, replaced subject, different color, different shape, different size, blurry, watermark, text, low quality');
   const [upscale, setUpscale] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<string>('1:1');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -109,21 +114,24 @@ export default function ImagesStep({ originalImage, productName, productType: in
     }
 
     setIsGenerating(true);
-    
+
     // Scroll to top to show loader
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     try {
+      // Enhance the prompt to explicitly preserve the product
+      const enhancedPrompt = `Keep the exact same product from the reference image with no modifications. ${prompt}. Only change background, lighting, or camera angle.`;
+
       const response = await fetch('/api/generate-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt,
+          prompt: enhancedPrompt,
           negativePrompt,
           upscale,
           aspectRatio,
           inputImageUrl: originalImage, // Use original image for image-to-image
-          imagePromptStrength: 0.98, // Enforce near-exact adherence to the uploaded image
+          imagePromptStrength: 0.99, // Maximum adherence to preserve the product exactly
           userId: user?.id, // Pass user ID for limit checking
           productName, // Pass product name for alt text generation
         }),
@@ -235,6 +243,13 @@ export default function ImagesStep({ originalImage, productName, productType: in
         <Typography variant="h4">
           Generate Product Images ({completedCount}/9 completed)
         </Typography>
+
+        {/* Important Notice */}
+        <Alert severity="info" icon={<ImageIcon />}>
+          <AlertTitle>Product Preservation Guarantee</AlertTitle>
+          AI will keep your <strong>product exactly as it is</strong> - same design, colors, shape, and details.
+          Only the <strong>background, lighting, and camera angle</strong> will change based on your prompts.
+        </Alert>
 
         {/* Current Image Generation */}
         <Paper sx={{ p: 3, bgcolor: 'background.default' }}>

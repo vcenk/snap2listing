@@ -15,6 +15,14 @@ import {
   Card,
   CardContent,
   alpha,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { useState } from 'react';
 import SaveIcon from '@mui/icons-material/Save';
@@ -22,9 +30,13 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ImageIcon from '@mui/icons-material/Image';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import StoreIcon from '@mui/icons-material/Store';
 import { GeneratedImage, GeneratedVideo } from '@/lib/types';
+import { ListingBase, ChannelOverride, Channel } from '@/lib/types/channels';
 
 interface ReviewStepProps {
+  // For backward compatibility
   title: string;
   description: string;
   tags: string[];
@@ -36,6 +48,11 @@ interface ReviewStepProps {
   onExport?: () => void;
   listingId?: string;
   selectedChannelIds?: string[];
+
+  // New: Full data display
+  baseData?: ListingBase;
+  channelOverrides?: ChannelOverride[];
+  channels?: Channel[];
 }
 
 export default function ReviewStep({
@@ -50,8 +67,12 @@ export default function ReviewStep({
   onExport,
   listingId,
   selectedChannelIds = [],
+  baseData,
+  channelOverrides = [],
+  channels = [],
 }: ReviewStepProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedChannelTab, setSelectedChannelTab] = useState(0);
 
   const handleExport = async () => {
     if (!listingId) {
@@ -118,11 +139,11 @@ export default function ReviewStep({
           <Stack direction="row" alignItems="center" spacing={2} mb={1}>
             <CheckCircleIcon sx={{ fontSize: 32, color: 'success.main' }} />
             <Typography variant="h4" fontWeight={700}>
-              Review Your Listing
+              Review & Save Your Listing
             </Typography>
           </Stack>
           <Typography variant="body1" color="text.secondary">
-            Everything looks great! Review your listing before saving.
+            Your product listing is ready! Review all details below and save to start selling across your selected channels.
           </Typography>
         </Box>
 
@@ -215,14 +236,14 @@ export default function ReviewStep({
                       display: 'flex',
                     }}
                   >
-                    <LocalOfferIcon />
+                    <StoreIcon />
                   </Box>
                   <Box>
                     <Typography variant="h4" fontWeight={700}>
-                      {tags.length}
+                      {selectedChannelIds.length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Tags Added
+                      Sales Channels
                     </Typography>
                   </Box>
                 </Stack>
@@ -294,39 +315,19 @@ export default function ReviewStep({
           {/* Right: Details */}
           <Grid item xs={12} lg={5}>
             <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" fontWeight={600} mb={2}>
-                Listing Details
+              <Typography variant="h6" fontWeight={600} mb={3}>
+                Product Listing Details
               </Typography>
 
               <Stack spacing={3}>
                 {/* Title */}
                 <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" mb={1}>
                     TITLE
                   </Typography>
-                  <Typography variant="h5" fontWeight={700} sx={{ mt: 0.5 }}>
-                    {title}
+                  <Typography variant="h5" fontWeight={700}>
+                    {baseData?.title || title}
                   </Typography>
-                </Box>
-
-                <Divider />
-
-                {/* Tags */}
-                <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600} mb={1} display="block">
-                    TAGS ({tags.length})
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {tags.map((tag) => (
-                      <Chip
-                        key={tag}
-                        label={tag}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontWeight: 600 }}
-                      />
-                    ))}
-                  </Box>
                 </Box>
 
                 <Divider />
@@ -340,18 +341,216 @@ export default function ReviewStep({
                     variant="body2"
                     sx={{
                       whiteSpace: 'pre-line',
-                      maxHeight: 200,
+                      maxHeight: 300,
                       overflowY: 'auto',
                       pr: 1,
+                      lineHeight: 1.6,
                     }}
                   >
-                    {description}
+                    {baseData?.description || description}
                   </Typography>
                 </Box>
+
+                {/* Show tags if any channel has them */}
+                {channelOverrides && channelOverrides.some(o => o.tags && o.tags.length > 0) && (
+                  <>
+                    <Divider />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600} mb={1} display="block">
+                        TAGS/KEYWORDS
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {/* Get tags from first channel override that has them */}
+                        {channelOverrides.find(o => o.tags && o.tags.length > 0)?.tags.slice(0, 13).map((tag, idx) => (
+                          <Chip
+                            key={idx}
+                            label={tag}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                            sx={{ fontWeight: 600 }}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  </>
+                )}
+
+                {/* Show bullets if any channel has them */}
+                {channelOverrides && channelOverrides.some(o => o.bullets && o.bullets.length > 0) && (
+                  <>
+                    <Divider />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600} mb={1} display="block">
+                        KEY FEATURES
+                      </Typography>
+                      <List dense sx={{ pl: 0 }}>
+                        {channelOverrides.find(o => o.bullets && o.bullets.length > 0)?.bullets.map((bullet, idx) => (
+                          <ListItem key={idx} sx={{ pl: 0, py: 0.5 }}>
+                            <ListItemText
+                              primary={`• ${bullet}`}
+                              primaryTypographyProps={{ variant: 'body2' }}
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  </>
+                )}
+
+                {/* Show materials if any channel has them */}
+                {channelOverrides && channelOverrides.some(o => o.materials && o.materials.length > 0) && (
+                  <>
+                    <Divider />
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600} mb={1} display="block">
+                        MATERIALS
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {channelOverrides.find(o => o.materials && o.materials.length > 0)?.materials.map((material, idx) => (
+                          <Chip
+                            key={idx}
+                            label={material}
+                            size="small"
+                            color="secondary"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  </>
+                )}
               </Stack>
             </Paper>
           </Grid>
         </Grid>
+
+        {/* Channel-Specific Details */}
+        {channelOverrides.length > 0 && channels.length > 0 && (
+          <Paper elevation={2} sx={{ p: 3 }}>
+            <Stack direction="row" alignItems="center" spacing={2} mb={3}>
+              <StoreIcon color="primary" />
+              <Typography variant="h6" fontWeight={600}>
+                Channel-Specific Details
+              </Typography>
+            </Stack>
+
+            <Alert severity="info" sx={{ mb: 3 }}>
+              Each sales channel has optimized content tailored to its requirements and audience.
+            </Alert>
+
+            <Tabs
+              value={selectedChannelTab}
+              onChange={(e, newValue) => setSelectedChannelTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
+            >
+              {channelOverrides.map((override, index) => {
+                const channel = channels.find(c => c.id === override.channelId || c.slug === override.channelSlug);
+                return (
+                  <Tab
+                    key={override.channelId || index}
+                    label={channel?.name || override.channelSlug}
+                    icon={<StoreIcon />}
+                    iconPosition="start"
+                  />
+                );
+              })}
+            </Tabs>
+
+            {channelOverrides.map((override, index) => {
+              const channel = channels.find(c => c.id === override.channelId || c.slug === override.channelSlug);
+
+              if (selectedChannelTab !== index) return null;
+
+              return (
+                <Box key={override.channelId || index}>
+                  <Grid container spacing={3}>
+                    {/* Title */}
+                    <Grid item xs={12} md={6}>
+                      <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} mb={1} display="block">
+                          TITLE
+                        </Typography>
+                        <Typography variant="body1" fontWeight={600}>
+                          {override.title || baseData?.title || title}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+
+                    {/* Price - Hidden for POD products */}
+
+                    {/* Description */}
+                    <Grid item xs={12}>
+                      <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} mb={1} display="block">
+                          DESCRIPTION
+                        </Typography>
+                        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
+                          {override.description || baseData?.description || description}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+
+                    {/* Tags/Keywords */}
+                    {override.tags && override.tags.length > 0 && (
+                      <Grid item xs={12}>
+                        <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
+                          <Typography variant="caption" color="text.secondary" fontWeight={600} mb={1} display="block">
+                            TAGS/KEYWORDS ({override.tags.length})
+                          </Typography>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {override.tags.map((tag, idx) => (
+                              <Chip key={idx} label={tag} size="small" color="primary" variant="outlined" />
+                            ))}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    )}
+
+                    {/* Bullet Points/Features */}
+                    {override.bullets && override.bullets.length > 0 && (
+                      <Grid item xs={12}>
+                        <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
+                          <Typography variant="caption" color="text.secondary" fontWeight={600} mb={1} display="block">
+                            KEY FEATURES ({override.bullets.length})
+                          </Typography>
+                          <List dense>
+                            {override.bullets.map((bullet, idx) => (
+                              <ListItem key={idx} sx={{ pl: 0 }}>
+                                <ListItemText
+                                  primary={`• ${bullet}`}
+                                  primaryTypographyProps={{ variant: 'body2' }}
+                                />
+                              </ListItem>
+                            ))}
+                          </List>
+                        </Paper>
+                      </Grid>
+                    )}
+
+                    {/* Materials (Etsy) */}
+                    {override.materials && override.materials.length > 0 && (
+                      <Grid item xs={12}>
+                        <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
+                          <Typography variant="caption" color="text.secondary" fontWeight={600} mb={1} display="block">
+                            MATERIALS
+                          </Typography>
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {override.materials.map((material, idx) => (
+                              <Chip key={idx} label={material} size="small" color="secondary" variant="outlined" />
+                            ))}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Box>
+              );
+            })}
+          </Paper>
+        )}
 
         {/* Action Buttons */}
         <Stack direction="row" justifyContent="space-between" pt={2}>

@@ -13,22 +13,22 @@ import {
   Skeleton,
   Chip,
   alpha,
+  Alert,
+  AlertTitle,
 } from '@mui/material';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth/context';
-import ImageIcon from '@mui/icons-material/Image';
-import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import CreditCalculator from '@/components/Dashboard/CreditCalculator';
 import {
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   ResponsiveContainer,
   XAxis,
   YAxis,
@@ -36,8 +36,6 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-
-const COLORS = ['#2196F3', '#FF9800', '#4CAF50', '#F44336'];
 
 function StatCard({ title, value, limit, icon, subtitle, color = 'primary' }: any) {
   const percentage = limit ? Math.min(100, (value / limit) * 100) : 0;
@@ -207,22 +205,11 @@ export default function OverviewPage() {
   // Prepare chart data
   const usageData = [
     {
-      name: 'Images',
-      used: stats.imagesUsed,
-      limit: stats.imagesLimit,
-      remaining: Math.max(0, stats.imagesLimit - stats.imagesUsed),
+      name: 'Credits',
+      used: stats.creditsUsed,
+      limit: stats.creditsLimit,
+      remaining: stats.creditsRemaining,
     },
-    {
-      name: 'Videos',
-      used: stats.videosUsed,
-      limit: stats.videosLimit,
-      remaining: Math.max(0, stats.videosLimit - stats.videosUsed),
-    },
-  ];
-
-  const listingsPieData = [
-    { name: 'Published', value: stats.publishedCount },
-    { name: 'Draft', value: Math.max(0, stats.listingsCount - stats.publishedCount) },
   ];
 
   return (
@@ -257,24 +244,58 @@ export default function OverviewPage() {
         </Button>
       </Stack>
 
+      {/* Trial Countdown Banner (Free Users Only) */}
+      {stats.currentPlan === 'free' && (
+        <Alert
+          severity={stats.trialDaysRemaining <= 2 ? 'error' : stats.trialDaysRemaining <= 4 ? 'warning' : 'info'}
+          sx={{ mb: 3 }}
+          icon={<AccessTimeIcon />}
+          action={
+            <Button
+              component={Link}
+              href="/app/billing"
+              size="small"
+              variant="contained"
+              sx={{ whiteSpace: 'nowrap' }}
+            >
+              Upgrade Now
+            </Button>
+          }
+        >
+          <AlertTitle fontWeight={700}>
+            {stats.trialExpired ? 'Free Trial Ended' : `${stats.trialDaysRemaining} ${stats.trialDaysRemaining === 1 ? 'Day' : 'Days'} Left in Trial`}
+          </AlertTitle>
+          {stats.trialExpired ? (
+            <Typography variant="body2">
+              Your free trial has ended. Upgrade to continue creating listings with Snap2Listing.
+            </Typography>
+          ) : (
+            <Typography variant="body2">
+              You have {stats.creditsRemaining} credits remaining. Upgrade for unlimited access to all features.
+            </Typography>
+          )}
+        </Alert>
+      )}
+
       {/* KPI Cards */}
       <Grid container spacing={3} mb={4}>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Images Generated"
-            value={stats.imagesUsed}
-            limit={stats.imagesLimit}
-            icon={<ImageIcon fontSize="inherit" />}
+            title="Credits Used"
+            value={stats.creditsUsed}
+            limit={stats.creditsLimit}
+            subtitle={`${stats.creditsRemaining} remaining`}
+            icon={<CreditCardIcon fontSize="inherit" />}
             color="primary"
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Videos Created"
-            value={stats.videosUsed}
-            limit={stats.videosLimit}
-            icon={<VideoLibraryIcon fontSize="inherit" />}
-            color="secondary"
+            title={stats.currentPlan === 'free' ? 'Trial Status' : 'Plan Status'}
+            value={stats.currentPlan === 'free' && stats.trialDaysRemaining ? `${stats.trialDaysRemaining} days` : stats.planName || stats.currentPlan}
+            subtitle={stats.currentPlan === 'free' ? (stats.trialExpired ? 'Trial expired' : 'Trial active') : `${stats.creditsLimit} credits/month`}
+            icon={<AccessTimeIcon fontSize="inherit" />}
+            color={stats.currentPlan === 'free' && stats.trialDaysRemaining <= 2 ? 'error' : 'secondary'}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
@@ -290,7 +311,7 @@ export default function OverviewPage() {
           <StatCard
             title="Supported Channels"
             value={stats.channelsCount}
-            subtitle={`${stats.currentPlan} plan`}
+            subtitle="marketplaces"
             icon={<StorefrontIcon fontSize="inherit" />}
             color="warning"
           />
@@ -302,10 +323,10 @@ export default function OverviewPage() {
         <Grid item xs={12} lg={8}>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h5" gutterBottom fontWeight={600}>
-              Resource Usage This Month
+              Credit Usage This Month
             </Typography>
             <Typography variant="body2" color="text.secondary" mb={3}>
-              Track your images and videos generation
+              Track your credit consumption across all actions
             </Typography>
 
             {/* Bar Chart */}
@@ -329,46 +350,17 @@ export default function OverviewPage() {
           </Paper>
         </Grid>
 
-        {/* Listings Pie Chart & Quick Actions */}
+        {/* Credit Calculator & Quick Actions */}
         <Grid item xs={12} lg={4}>
           <Stack spacing={3} height="100%">
-            {/* Listings Distribution */}
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom fontWeight={600}>
-                Listings Status
-              </Typography>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie
-                    data={listingsPieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={70}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {listingsPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-              <Stack direction="row" spacing={2} justifyContent="center" mt={1}>
-                {listingsPieData.map((entry, index) => (
-                  <Stack key={entry.name} direction="row" alignItems="center" spacing={0.5}>
-                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: COLORS[index] }} />
-                    <Typography variant="caption">
-                      {entry.name}: {entry.value}
-                    </Typography>
-                  </Stack>
-                ))}
-              </Stack>
-            </Paper>
+            {/* Credit Calculator */}
+            <CreditCalculator
+              creditsRemaining={stats.creditsRemaining}
+              breakdown={stats.creditBreakdown}
+            />
 
             {/* Quick Actions */}
-            <Paper sx={{ p: 3, flexGrow: 1 }}>
+            <Paper sx={{ p: 3 }}>
               <Typography variant="h6" gutterBottom fontWeight={600}>
                 Quick Actions
               </Typography>

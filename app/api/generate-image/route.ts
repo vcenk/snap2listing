@@ -38,26 +38,24 @@ export async function POST(request: NextRequest) {
       productName,
     } = await request.json();
 
-    const mergedNegative = [
-      negativePrompt,
-      // Guardrails against changing the subject
-      'different subject',
-      'replaced subject',
-      'missing subject',
-      'identity change',
-      'redraw',
-      'reimagine',
-      'wrong logo',
-      'wrong design',
-      'distorted subject',
-    ]
-      .filter(Boolean)
-      .join(', ');
-
-    // If image provided and no or low strength specified, enforce a high minimum
-    const effectiveStrength = inputImageUrl
-      ? Math.max(imagePromptStrength ?? 0.97, 0.95)
-      : imagePromptStrength;
+    // Only add guardrails for image-to-image (to prevent subject drift)
+    const mergedNegative = inputImageUrl
+      ? [
+          negativePrompt,
+          // Guardrails against changing the subject
+          'different subject',
+          'replaced subject',
+          'missing subject',
+          'identity change',
+          'redraw',
+          'reimagine',
+          'wrong logo',
+          'wrong design',
+          'distorted subject',
+        ]
+          .filter(Boolean)
+          .join(', ')
+      : negativePrompt || '';
 
     // Check usage limits
     if (userId) {
@@ -77,15 +75,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate image with FAL.ai FLUX Pro Kontext
-    const result = await generateImage({
+    // Build request params conditionally
+    const generateParams: any = {
       prompt,
       negativePrompt: mergedNegative,
       aspectRatio: aspectRatio || '1:1',
-      inputImageUrl, // For image-to-image generation
-      imagePromptStrength: effectiveStrength, // Strength of input image influence (0-1)
       numImages: 1,
-    });
+    };
+
+    // Only add image-to-image params if input image is provided
+    if (inputImageUrl) {
+      generateParams.inputImageUrl = inputImageUrl;
+      // If image provided and no or low strength specified, enforce a high minimum
+      generateParams.imagePromptStrength = Math.max(imagePromptStrength ?? 0.97, 0.95);
+    }
+
+    // Generate image with FAL.ai FLUX Pro Kontext
+    const result = await generateImage(generateParams);
 
     if (!result.images || result.images.length === 0) {
       throw new Error('No image generated');

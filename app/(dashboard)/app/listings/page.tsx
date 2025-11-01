@@ -26,6 +26,9 @@ import {
   Skeleton,
   Checkbox,
   FormControlLabel,
+  Radio,
+  RadioGroup,
+  Divider,
 } from '@mui/material';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -85,6 +88,7 @@ export default function ListingsPage() {
   const [exportError, setExportError] = useState('');
   const [listingChannels, setListingChannels] = useState<{ channelId: string; channelSlug: string; readinessScore?: number; isReady?: boolean; title?: string }[]>([]);
   const [selectedChannelId, setSelectedChannelId] = useState('');
+  const [exportFormat, setExportFormat] = useState<'package' | 'word' | 'csv'>('package');
   const [preflight, setPreflight] = useState<{ validation: any; preflightChecks: any[] } | null>(null);
   // Selection state for multi-delete
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -127,7 +131,23 @@ export default function ListingsPage() {
       const res = await fetch(`/api/listings/${listing.id}?userId=${user.id}`);
       const data = await res.json();
       if (!res.ok || !data?.success) throw new Error(data?.error || 'Failed to load listing');
-      const chans = (data.listing.channels || []) as { channelId: string; channelSlug: string; readinessScore?: number; isReady?: boolean; title?: string }[];
+
+      // Transform channels data to include both metadata and overrides
+      const channels = data.listing.channels || [];
+      const channelOverrides = data.listing.channelOverrides || [];
+
+      const chans = channels.map((channel: any) => {
+        const override = channelOverrides.find((o: any) => o.channelId === channel.id);
+        return {
+          channelId: channel.id,
+          channelSlug: channel.slug,
+          channelName: channel.name,
+          readinessScore: override?.readinessScore,
+          isReady: override?.isReady,
+          title: override?.title,
+        };
+      });
+
       setListingChannels(chans);
       if (chans[0]?.channelId) setSelectedChannelId(chans[0].channelId);
       setExportDialogOpen(true);
@@ -161,7 +181,11 @@ export default function ListingsPage() {
       const res = await fetch('/api/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listingId: selectedListing.id, channelId: selectedChannelId }),
+        body: JSON.stringify({
+          listingId: selectedListing.id,
+          channelId: selectedChannelId,
+          format: exportFormat,
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data?.success) throw new Error(data?.error || 'Export failed');
@@ -398,11 +422,8 @@ export default function ListingsPage() {
                     >
                       {listing.title}
                     </Typography>
-                    <Typography variant="h5" color="primary">
-                      ${listing.price}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {listing.imageCount} images • {listing.channelCount} channels • SEO: {listing.seoScore}/100
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {listing.imageCount} images • {listing.channelCount} channels • SEO: {listing.seoScore}%
                     </Typography>
                   </Stack>
                 </CardContent>
@@ -482,6 +503,67 @@ export default function ListingsPage() {
               </Select>
             </FormControl>
 
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="subtitle2" gutterBottom>
+              Export Format
+            </Typography>
+            <RadioGroup
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as 'package' | 'word' | 'csv')}
+            >
+              <FormControlLabel
+                value="package"
+                control={<Radio />}
+                label={
+                  <Box>
+                    <Typography variant="body1" fontWeight={600}>
+                      📦 Complete Package (ZIP) - Recommended
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Word document + All images + CSV file + Instructions
+                    </Typography>
+                  </Box>
+                }
+                disabled={exporting}
+              />
+              <FormControlLabel
+                value="word"
+                control={<Radio />}
+                label={
+                  <Box>
+                    <Typography variant="body1" fontWeight={600}>
+                      📄 Word Document (.docx)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Formatted document with embedded images - Easy to edit
+                    </Typography>
+                  </Box>
+                }
+                disabled={exporting}
+              />
+              <FormControlLabel
+                value="csv"
+                control={<Radio />}
+                label={
+                  <Box>
+                    <Stack direction="row" alignItems="center" spacing={1}>
+                      <Typography variant="body1" fontWeight={600}>
+                        📋 Spreadsheet (CSV)
+                      </Typography>
+                      <Chip label="Coming Soon" size="small" color="info" sx={{ height: 20, fontSize: '0.7rem' }} />
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary">
+                      Bulk upload format - Images as URLs only
+                    </Typography>
+                  </Box>
+                }
+                disabled={true}
+              />
+            </RadioGroup>
+
+            <Divider sx={{ my: 2 }} />
+
             {selectedListing && (
               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
                 <Typography variant="subtitle2" gutterBottom>
@@ -491,16 +573,13 @@ export default function ListingsPage() {
                   <strong>Title:</strong> {selectedListing.title}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Price:</strong> ${selectedListing.price}
-                </Typography>
-                <Typography variant="body2">
                   <strong>Images:</strong> {selectedListing.imageCount}
                 </Typography>
                 <Typography variant="body2">
                   <strong>Channels:</strong> {selectedListing.channelCount}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>SEO Score:</strong> {selectedListing.seoScore}/100
+                  <strong>SEO Score:</strong> {selectedListing.seoScore}%
                 </Typography>
               </Box>
             )}
@@ -528,7 +607,21 @@ export default function ListingsPage() {
             )}
 
             <Alert severity="info">
-              Exports are downloaded as files (CSV/XLSX/TXT) depending on channel. Use the chosen platform to import or proceed with listing.
+              {exportFormat === 'package' && (
+                <>
+                  <strong>Complete Package:</strong> Includes Word document with formatted content and embedded images, all images in a separate folder, CSV file for bulk upload, and detailed instructions. Everything you need in one ZIP file!
+                </>
+              )}
+              {exportFormat === 'word' && (
+                <>
+                  <strong>Word Document:</strong> Professional document with embedded product images, formatted content, and all listing details. Perfect for editing or reference.
+                </>
+              )}
+              {exportFormat === 'csv' && (
+                <>
+                  <strong>CSV Spreadsheet:</strong> Bulk upload format for the selected platform. Note: Images are included as URLs only - you'll need to upload them separately.
+                </>
+              )}
             </Alert>
           </Stack>
         </DialogContent>

@@ -25,29 +25,76 @@ export async function generateListingText(
   input: GenerateListingTextInput
 ): Promise<GenerateListingTextOutput> {
   try {
-    const systemPrompt = `You are an expert Etsy listing copywriter. Generate SEO-optimized, compelling listing content that converts browsers into buyers. Follow these rules:
-1. Title: Max 140 characters, include key selling points and category
-2. Tags: 13 relevant tags, mix of specific and broad terms for SEO
-3. Description: 2-3 paragraphs with features, benefits, use cases, and shipping info
-4. Materials: Up to 13 materials used to make the product`;
+    const systemPrompt = `You are an EXPERT ETSY SEO SPECIALIST and conversion copywriter. Your listings consistently rank in the top 3 search results and convert at 5%+ rates.
 
-    const userPrompt = `Create an Etsy listing for this product:
+ETSY SEO ALGORITHM UNDERSTANDING:
+- Etsy's search prioritizes: Recency, listing quality score, tags, title keywords, and sales velocity
+- First 40 characters of title are CRITICAL for search ranking
+- All 13 tags must be utilized with mix of broad, specific, and long-tail keywords
+- Description affects quality score - must be detailed, benefit-focused, 200+ words
+
+CONVERSION PSYCHOLOGY:
+- Buyers search for solutions, not products
+- Emotional connection > feature lists
+- Story-driven content builds trust
+- Specific details (measurements, materials, processes) increase confidence
+
+YOUR MISSION: Create a listing that ranks #1 AND converts browsers into buyers.`;
+
+    const userPrompt = `Create a HIGH-PERFORMING Etsy listing for this product:
+
+📦 PRODUCT INFO:
 Category: ${input.category}
 ${input.productName ? `Product: ${input.productName}` : ''}
 ${input.shortDescription ? `Details: ${input.shortDescription}` : ''}
 
-Generate:
-1. A compelling title (max 140 chars)
-2. 13 SEO tags
-3. A detailed description
-4. Materials list (what the product is made from, up to 13 items)
+🎯 GENERATE SEO-OPTIMIZED CONTENT:
+
+1. **TITLE** (40-140 chars, optimal: 60-100)
+   - Structure: [Primary Keyword] - [Style/Material] [Unique Benefit] for [Target Buyer]
+   - Front-load with what buyers search: "Handmade", "Custom", "Personalized", product type
+   - Include: Main keyword + 2-3 descriptive modifiers + category/use case
+   - Example: "Handmade Leather Wallet - Personalized Mens Gift - Slim Minimalist Bifold"
+   - MUST be specific, searchable, and compelling
+
+2. **TAGS** (Exactly 13 tags, max 20 chars each)
+   - Mix composition: 5 broad terms, 5 specific terms, 3 long-tail phrases
+   - Include: Product type, materials, occasions, styles, benefits, target audience
+   - Examples: "leather wallet", "mens gift", "personalized", "minimalist wallet", "anniversary gift"
+   - Use natural buyer search language, not industry jargon
+   - Avoid: Duplicate words across tags, brand names, irrelevant terms
+
+3. **DESCRIPTION** (200-500 words, scannable format)
+   Structure:
+   - **Opening (1-2 sentences)**: Hook with main benefit and emotional appeal
+   - **Features (paragraph)**: Specifications, materials, dimensions, craftsmanship
+   - **Benefits (paragraph)**: How it solves problems, improves life, creates joy
+   - **Use Cases (paragraph)**: Occasions, gifting ideas, styling suggestions
+   - **Details (paragraph)**: Care instructions, variations, customization options
+   - **Trust/Shipping**: Processing time, quality guarantee, shop policies
+
+   Style: Warm, personal, story-driven. Use "you" language. Include specific measurements.
+
+4. **MATERIALS** (3-13 items, specific materials used)
+   - Be SPECIFIC: "full-grain vegetable-tanned leather" not "leather"
+   - Include finishes: "solid brass hardware", "waxed linen thread", "beeswax coating"
+   - List in order of prominence
+   - Examples: "organic cotton", "recycled brass", "water-based ink"
+
+⚠️ CRITICAL REQUIREMENTS:
+- Front-load title with PRIMARY search keyword (first 40 chars)
+- Use ALL 13 tag slots - every tag counts for SEO
+- Description MUST be 200+ words for quality score
+- Natural language - NO keyword stuffing
+- Specific details beat vague descriptions
+- Benefit-focused copy that addresses buyer needs
 
 Return ONLY valid JSON in this exact format:
 {
-  "title": "your title here",
-  "tags": ["tag1", "tag2", ...],
-  "description": "your description here",
-  "materials": ["material1", "material2", ...]
+  "title": "your SEO-optimized title here (40-140 chars)",
+  "tags": ["tag1", "tag2", "tag3", ... 13 total],
+  "description": "your compelling 200+ word description here",
+  "materials": ["specific material 1", "specific material 2", ... up to 13]
 }`;
 
     // Build message content - include image only if it's a valid HTTP URL
@@ -230,75 +277,183 @@ export async function generateChannelListing(
   input: ChannelListingInput
 ): Promise<ChannelListingOutput> {
   try {
-    // Channel-specific requirements and prompts
+    // Channel-specific requirements and SEO optimization strategies
     const channelSpecs: Record<string, any> = {
       amazon: {
         titleMax: 200,
         titleRecommended: 80,
         bulletCount: 5,
-        format: 'Amazon requires keyword-rich titles, benefit-driven bullet points with checkmarks, and search-optimized keywords.',
+        format: `AMAZON A9 ALGORITHM OPTIMIZATION:
+- Title: Front-load with brand + product type + key features. Include size, color, quantity in title.
+- Bullets: Start each with ALL CAPS benefit statement, followed by supporting details.
+- Keywords: Backend search terms (hidden) - use all 250 bytes with relevant synonyms.
+- SEO Focus: Feature-rich titles, benefit-driven bullets, comprehensive backend keywords.
+- Conversion: Trust badges, Prime eligibility, clear specifications, problem-solving benefits.`,
         fields: ['title', 'bullet_points', 'description', 'keywords'],
       },
       ebay: {
         titleMax: 80,
         bulletCount: 5,
-        format: 'eBay needs concise titles front-loaded with key terms, HTML-formatted descriptions with features, and descriptive tags.',
+        format: `EBAY CASSINI SEARCH OPTIMIZATION:
+- Title: Pack 60-80 chars with high-volume keywords. Include brand, model, condition, key specs.
+- Description: HTML-formatted with images, tables, feature lists. Must be scannable.
+- Item Specifics: Critical for search - use all available fields (brand, type, color, etc.).
+- SEO Focus: Keyword density in title, detailed item specifics, structured HTML description.
+- Conversion: Professional formatting, clear photos, detailed specifications, shipping info.`,
         fields: ['title', 'description', 'tags', 'bullets'],
       },
       etsy: {
         titleMax: 140,
         tagCount: 13,
         tagMaxLength: 20,
-        format: 'Etsy requires descriptive, story-driven titles, 13 tags (max 20 chars each), materials list, and benefit-focused bullet points.',
+        format: `ETSY SEARCH & DISCOVERY OPTIMIZATION:
+- Title: First 40 chars CRITICAL - include primary keyword. Full 140 chars for long-tail terms.
+- Tags: All 13 required. Mix broad (1-2 words), specific (2-3 words), long-tail (3-4 words).
+- Description: 200+ words, story-driven, benefit-focused. Include sizing, materials, care.
+- Materials: Specific materials boost quality score and trust. Use all available slots.
+- SEO Focus: Tag utilization, title keyword front-loading, quality score optimization.
+- Conversion: Emotional storytelling, handmade appeal, gift positioning, personal touch.`,
         fields: ['title', 'description', 'tags', 'materials', 'bullets'],
       },
       tiktok: {
         titleMax: 100,
         descMax: 500,
-        format: 'TikTok Shop needs catchy, trend-friendly titles, short descriptions, viral hashtags, and engaging captions.',
+        format: `TIKTOK SHOP DISCOVERY OPTIMIZATION:
+- Title: Catchy, trend-aware, benefit-focused. Use emojis strategically (1-2 max).
+- Description: Short, punchy, mobile-optimized. Focus on social proof and FOMO.
+- Hashtags: Mix trending + niche. 5-8 hashtags, front-load with #TikTokMadeMeBuyIt.
+- Video Caption: Hook in first 3 seconds, clear CTA, engaging narrative.
+- SEO Focus: Trending hashtags, viral keywords, social commerce language.
+- Conversion: Social proof, urgency, entertainment value, influencer language.`,
         fields: ['title', 'short_description', 'hashtags', 'video_caption'],
       },
       shopify: {
         titleMax: 255,
-        format: 'Shopify needs clear titles, HTML-formatted descriptions, SEO meta fields, and collection tags.',
+        format: `SHOPIFY SEO & GOOGLE SHOPPING OPTIMIZATION:
+- Title: Include brand + product type + key features. Optimized for Google Shopping feed.
+- Meta Title: 50-60 chars, primary keyword front-loaded for Google search.
+- Meta Description: 150-160 chars, compelling CTA with keyword variations.
+- Description: Rich HTML content with H2/H3 tags, bullet lists, specifications table.
+- Tags: Collection tags for site navigation + SEO keywords for search.
+- SEO Focus: Google Shopping feed optimization, on-page SEO, schema markup ready.
+- Conversion: Professional formatting, trust signals, clear CTAs, size guides.`,
         fields: ['title', 'description', 'seo_meta_title', 'seo_meta_description', 'tags'],
       },
       facebook: {
         titleMax: 150,
         descMax: 5000,
-        format: 'Facebook Shop requires concise titles, benefit-focused descriptions, short ad captions, and relevant tags.',
+        format: `FACEBOOK COMMERCE & META SEARCH OPTIMIZATION:
+- Title: Clear, benefit-focused, mobile-friendly. Include brand + product + key feature.
+- Description: Scannable format with emojis, bullet points, clear specifications.
+- Ad Caption: 40-80 chars, hook-driven, scroll-stopping, with clear value prop.
+- Tags: Product categories + interest targeting keywords for Meta algorithm.
+- SEO Focus: Mobile-first optimization, social sharing appeal, Meta catalog compatibility.
+- Conversion: Social proof emphasis, community feel, sharing incentive, visual appeal.`,
         fields: ['title', 'description', 'ad_caption', 'tags'],
       },
     };
 
     const spec = channelSpecs[input.channel] || channelSpecs.shopify;
 
-    const systemPrompt = `You are an expert e-commerce copywriter specializing in ${input.channel.toUpperCase()} listings. Create SEO-optimized, conversion-focused content that follows marketplace best practices.
+    const systemPrompt = `You are an expert e-commerce SEO copywriter and marketplace specialist for ${input.channel.toUpperCase()} with VISUAL PRODUCT ANALYSIS capabilities. Your mission is to create HIGH-CONVERTING, SEO-OPTIMIZED listings that rank #1 in search results and drive maximum sales.
+
+🔍 CRITICAL FIRST STEP - ANALYZE THE PRODUCT IMAGE:
+1. Identify the EXACT PRODUCT TYPE (t-shirt, hoodie, mug, poster, canvas print, throw blanket, pillow, phone case, tote bag, etc.)
+2. Analyze the ARTWORK/DESIGN (theme, style, colors, subject matter, mood)
+3. Use these insights to generate accurate, specific content
 
 ${spec.format}
 
-Always include product benefits, features, and use cases. Make content compelling and searchable.`;
+SEO OPTIMIZATION REQUIREMENTS:
+1. **Keyword Strategy**: Front-load titles with primary keywords. Include 2-3 high-volume search terms naturally.
+2. **Long-tail Keywords**: Add specific descriptive phrases that buyers actually search for.
+3. **Semantic Keywords**: Include related terms and synonyms for broader reach.
+4. **Benefits Over Features**: Focus on how the product solves problems or improves lives.
+5. **Natural Language**: Write for humans first, search engines second. No keyword stuffing.
+6. **Compelling Copy**: Use action words, emotional triggers, and clear value propositions.
+7. **Scannable Format**: Use short paragraphs, bullets, and clear structure.
+8. **Search Intent**: Match what buyers are looking for at their stage in the purchase journey.
 
-    const userPrompt = `Create a ${input.channel.toUpperCase()} listing for this product:
+CONTENT QUALITY STANDARDS:
+- Title: Include main keyword, 1-2 modifiers, and a unique selling point
+- Description: Start with the main benefit, include features, use cases, and trust signals
+- Tags/Keywords: Mix of broad, specific, and long-tail terms with high search volume
+- Bullets: Each bullet should highlight ONE clear benefit with supporting details
+- Avoid: Duplicate content, vague phrases, filler words, excessive capitalization
 
+Make every word count. Create content that sells.`;
+
+    const userPrompt = `🖼️ ANALYZE THE IMAGE FIRST - Look at the product mockup and determine:
+1. Product Type: What item is this? (t-shirt, mug, canvas, etc.)
+2. Design Theme: What does the artwork show?
+3. Colors: What are the dominant colors?
+4. Style: Modern, vintage, minimalist, etc.?
+
+Then create a HIGH-CONVERTING, SEO-OPTIMIZED ${input.channel.toUpperCase()} listing:
+
+📦 PRODUCT INFORMATION:
 Category: ${input.category}
 ${input.productName ? `Product: ${input.productName}` : ''}
 Description: ${input.shortDescription}
 ${input.attributes?.brand ? `Brand: ${input.attributes.brand}` : ''}
 ${input.attributes?.material ? `Material: ${input.attributes.material}` : ''}
 ${input.attributes?.color ? `Color: ${input.attributes.color}` : ''}
+${input.attributes?.size ? `Size: ${input.attributes.size}` : ''}
 
-Generate the following fields optimized for ${input.channel}:
-${spec.fields.map((f: string) => `- ${f}`).join('\n')}
+🎯 SEO OPTIMIZATION GOALS:
+1. Title: MUST mention BOTH product type AND design theme
+   - Length: ${spec.titleMax ? `40-${Math.min(spec.titleMax, spec.titleRecommended || spec.titleMax)} chars (max ${spec.titleMax})` : '40-80 chars for optimal SEO'}
+   - Example: "Vintage Sunset Beach Mug - Ceramic Coffee Cup with Retro Design"
+   - NOT generic like "Custom Print Product" - BE SPECIFIC!
+   - Front-load with the ACTUAL product type you detected
 
-IMPORTANT:
-- Title: ${spec.titleMax ? `Max ${spec.titleMax} chars` : 'Concise and keyword-rich'}
-${spec.titleRecommended ? `- Title recommended: ${spec.titleRecommended} chars or less` : ''}
-${spec.bulletCount ? `- Bullet points: Exactly ${spec.bulletCount} benefit-driven bullets` : ''}
-${spec.tagCount ? `- Tags: Exactly ${spec.tagCount} SEO tags (max ${spec.tagMaxLength} chars each)` : ''}
-${spec.descMax ? `- Description: Max ${spec.descMax} chars` : ''}
+2. Description: Write for CONVERSION and SEO - MUST describe BOTH product AND artwork
+   - Length: ${spec.descMax ? `200-${spec.descMax} chars` : '200-2000 chars for best performance'}
+   - Structure:
+     * Opening: Describe what the PRODUCT is AND what the DESIGN shows
+     * Features: Product-specific specs (size, material, construction) + artwork details (colors, theme, style)
+     * Use Cases: How/when to use this specific product type
+     * Trust signals: Quality assurance for this product category
+   - Example for sunset beach mug: "This ceramic coffee mug features a stunning vintage sunset beach design with warm orange and pink hues. The 11oz capacity is perfect for your morning coffee..."
+   - Include: Natural keyword variations, benefits, social proof, sizing/specifications
+   - Format: Short paragraphs (2-3 sentences), scannable, engaging
 
-Return ONLY valid JSON in this format:
+3. Tags/Keywords: TARGET HIGH-VOLUME SEARCH TERMS
+   ${spec.tagCount ? `- Exactly ${spec.tagCount} tags (max ${spec.tagMaxLength || 20} chars each)` : '- 10-15 relevant keywords'}
+   - Mix: 40% broad terms, 40% specific terms, 20% long-tail phrases
+   - Include: DETECTED PRODUCT TYPE (first priority), artwork theme, materials, use cases, gift occasions, style descriptors
+   - Example: For a sunset beach t-shirt → ["graphic tee", "beach shirt", "sunset design", "summer clothing", "vacation wear"]
+   - Avoid: Duplicate words, irrelevant terms, brand names (unless instructed)
+
+${spec.bulletCount ? `4. Bullet Points/Key Features: Exactly ${spec.bulletCount} PRODUCT-SPECIFIC bullets
+   - MUST be relevant to the DETECTED PRODUCT TYPE you identified
+   - T-Shirt Example: "PREMIUM COMFORT - 100% soft cotton fabric, pre-shrunk for perfect fit"
+   - Mug Example: "DISHWASHER SAFE - Durable ceramic with heat-resistant coating for easy care"
+   - Canvas Example: "GALLERY QUALITY - Museum-grade canvas stretched on solid wood frame"
+   - Format: [Benefit specific to this product type] - [Supporting detail]
+   - Focus on: Features that matter for THIS specific product, not generic benefits` : ''}
+
+${spec.fields.includes('materials') ? `5. Materials: PRODUCT-TYPE SPECIFIC materials based on what you detected
+   - T-Shirt/Apparel: "100% cotton", "polyester blend", "soft fabric", "ribbed collar"
+   - Mug/Drinkware: "ceramic", "enamel coating", "food-safe glaze", "heat-resistant material"
+   - Canvas/Prints: "premium canvas", "archival ink", "solid wood frame", "acid-free paper"
+   - Blanket/Textiles: "fleece fabric", "microfiber", "polyester fill", "soft plush"
+   - Pillow: "polyester fill", "cotton cover", "hidden zipper", "soft fabric"
+   - Be SPECIFIC to the product type: "100% ring-spun cotton" not just "fabric"
+   - Include finishes relevant to product: "double-stitched hem" for apparel, "glossy finish" for mugs` : ''}
+
+📊 PLATFORM-SPECIFIC REQUIREMENTS:
+${spec.fields.map((f: string) => `✓ ${f.replace(/_/g, ' ').toUpperCase()}`).join('\n')}
+
+⚠️ CRITICAL RULES:
+- NO keyword stuffing or unnatural repetition
+- NO misleading claims or exaggerations
+- NO generic phrases like "high quality" without specifics
+- YES to natural, compelling, buyer-focused language
+- YES to specific measurements, materials, and details
+- YES to emotional connection and problem-solving benefits
+
+Return ONLY valid JSON in this exact format:
 ${JSON.stringify(getChannelJSONSchema(input.channel), null, 2)}`;
 
     // Build message content

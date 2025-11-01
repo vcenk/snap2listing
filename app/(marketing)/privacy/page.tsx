@@ -56,8 +56,8 @@ export default function PrivacyPolicyPage() {
               <Typography variant="body1" component="ul" sx={{ pl: 4 }}>
                 <li>Name and email address (for account creation)</li>
                 <li>Payment information (processed securely through Stripe)</li>
-                <li>Etsy shop information (when you connect your shop)</li>
-                <li>Product images and listing details you upload</li>
+                <li>Marketplace shop information (when you connect to platforms like Etsy, Shopify, Amazon, etc.)</li>
+                <li>Product images, mockup designs, and listing details you upload or create</li>
               </Typography>
 
               <Typography variant="h5" gutterBottom sx={{ mt: 2 }}>
@@ -78,13 +78,14 @@ export default function PrivacyPolicyPage() {
                 We use the information we collect to:
               </Typography>
               <Typography variant="body1" component="ul" sx={{ pl: 4 }}>
-                <li>Provide, maintain, and improve our services</li>
+                <li>Provide, maintain, and improve our AI-powered listing generation services</li>
                 <li>Process your payments and manage subscriptions</li>
-                <li>Generate AI-powered images and videos for your listings</li>
-                <li>Publish listings to your Etsy shop (with your permission)</li>
+                <li>Generate product mockups, images, and videos for your listings</li>
+                <li>Create SEO-optimized content for multiple marketplace channels</li>
+                <li>Export listings to your connected marketplaces (with your permission)</li>
                 <li>Send you service-related communications</li>
                 <li>Respond to your requests and support inquiries</li>
-                <li>Analyze usage patterns to improve our service</li>
+                <li>Analyze usage patterns to improve our AI models and service</li>
               </Typography>
             </Box>
 
@@ -97,10 +98,12 @@ export default function PrivacyPolicyPage() {
               </Typography>
               <Typography variant="body1" component="ul" sx={{ pl: 4 }}>
                 <li><strong>Stripe:</strong> Payment processing (subject to Stripe&apos;s Privacy Policy)</li>
-                <li><strong>Etsy API:</strong> Publishing listings to your shop (subject to Etsy&apos;s Privacy Policy)</li>
+                <li><strong>Marketplace APIs:</strong> Publishing listings to Etsy, Shopify, Amazon, eBay, TikTok Shop, and other platforms (each subject to their respective Privacy Policies)</li>
                 <li><strong>Supabase:</strong> Database and authentication services</li>
-                <li><strong>Replicate AI:</strong> Image and video generation</li>
-                <li><strong>Claude API:</strong> Text generation and SEO optimization</li>
+                <li><strong>Cloudflare R2:</strong> Secure image and file storage</li>
+                <li><strong>FAL AI:</strong> AI-powered image generation and editing</li>
+                <li><strong>OpenAI GPT-4:</strong> AI text generation, SEO optimization, and content analysis</li>
+                <li><strong>Dynamic Mockups:</strong> Product mockup generation for print-on-demand items</li>
               </Typography>
             </Box>
 
@@ -176,7 +179,7 @@ export default function PrivacyPolicyPage() {
                 If you have questions about this Privacy Policy, please contact us at:
               </Typography>
               <Typography variant="body1">
-                Email: privacy@snap2listing.com
+                Email: snap2listing@gmail.com
               </Typography>
             </Box>
           </Stack>
