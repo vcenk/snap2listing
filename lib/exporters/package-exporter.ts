@@ -28,16 +28,25 @@ export async function generatePackageExport(
   // 2. Download and add all images
   const imagesFolder = zip.folder('images');
   if (imagesFolder && listing.base.images && listing.base.images.length > 0) {
+    console.log(`📦 Downloading ${listing.base.images.length} images for export...`);
     for (let i = 0; i < listing.base.images.length; i++) {
       const imageUrl = listing.base.images[i];
+      console.log(`⬇️ Downloading image ${i + 1}:`, imageUrl);
       try {
         const imageBlob = await downloadImage(imageUrl);
         const extension = getImageExtension(imageUrl);
         imagesFolder.file(`image_${i + 1}.${extension}`, imageBlob);
+        console.log(`✅ Successfully added image ${i + 1} to ZIP`);
       } catch (error) {
-        console.error(`Failed to download image ${i + 1}:`, error);
+        console.error(`❌ Failed to download image ${i + 1}:`, error);
+        console.error('Image URL:', imageUrl);
+        console.error('Error details:', error instanceof Error ? error.message : String(error));
       }
     }
+  } else {
+    console.warn('⚠️ No images folder or no images to export');
+    console.log('Images folder exists:', !!imagesFolder);
+    console.log('Images array:', listing.base.images);
   }
 
   // 3. Add CSV file if provided (for bulk upload)
@@ -410,11 +419,30 @@ AI-Powered Multi-Channel Product Listings
  * Download image from URL and return as Blob
  */
 async function downloadImage(url: string): Promise<Blob> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to download image: ${response.statusText}`);
+  try {
+    // Try direct fetch first
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Snap2Listing/1.0',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+
+    if (blob.size === 0) {
+      throw new Error('Downloaded blob is empty (0 bytes)');
+    }
+
+    console.log(`✓ Downloaded image: ${blob.size} bytes, type: ${blob.type}`);
+    return blob;
+  } catch (error) {
+    console.error('Fetch failed, error:', error);
+    throw error;
   }
-  return await response.blob();
 }
 
 /**
