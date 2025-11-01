@@ -28,10 +28,7 @@ export class EbayExporter extends BaseExporter {
       errors.push('Description is required for eBay');
     }
 
-    // Price validation
-    if (!listing.base.price || listing.base.price <= 0) {
-      errors.push('Valid price is required for eBay');
-    }
+    // Price validation removed - price field is no longer used in the application
 
     // Quantity validation
     if (!listing.base.quantity || listing.base.quantity <= 0) {

@@ -237,29 +237,7 @@ export async function generateWordDocument(
     })
   );
 
-  if (listing.base.price) {
-    sections.push(
-      new Paragraph({
-        children: [
-          new TextRun({ text: 'Price: ', bold: true }),
-          new TextRun({ text: `$${listing.base.price}` }),
-        ],
-        spacing: { after: 150 },
-      })
-    );
-  }
-
-  if (listing.base.category) {
-    sections.push(
-      new Paragraph({
-        children: [
-          new TextRun({ text: 'Category: ', bold: true }),
-          new TextRun({ text: listing.base.category }),
-        ],
-        spacing: { after: 150 },
-      })
-    );
-  }
+  // Price and category fields removed - no longer used in the application
 
   if (listing.base.quantity) {
     sections.push(
@@ -331,8 +309,7 @@ function generateCopyPasteContent(listing: ListingData, channel: Channel): strin
   }
 
   content += `PRODUCT DETAILS:\n`;
-  if (listing.base.price) content += `Price: $${listing.base.price}\n`;
-  if (listing.base.category) content += `Category: ${listing.base.category}\n`;
+  // Price and category fields removed - no longer used in the application
   if (listing.base.quantity) content += `Quantity: ${listing.base.quantity}\n`;
 
   content += `\n========================================\n`;

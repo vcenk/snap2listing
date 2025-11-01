@@ -27,10 +27,7 @@ export class FacebookExporter extends BaseExporter {
       errors.push('Description is required for Facebook/Instagram');
     }
 
-    // Price validation
-    if (!listing.base.price || listing.base.price <= 0) {
-      errors.push('Valid price is required for Facebook/Instagram');
-    }
+    // Price validation removed - price field is no longer used in the application
 
     // Image validation
     if (content.images.length === 0) {
@@ -150,12 +147,7 @@ export class FacebookExporter extends BaseExporter {
             ? `${content.images.length} image(s) (recommended: 3+)`
             : undefined,
       },
-      {
-        name: 'Price',
-        description: 'Competitive pricing important on social',
-        status: listing.base.price > 0 ? 'pass' : 'fail',
-        message: listing.base.price <= 0 ? 'Invalid price' : undefined,
-      },
+      // Price preflight check removed - price field is no longer used in the application
     ];
   }
 

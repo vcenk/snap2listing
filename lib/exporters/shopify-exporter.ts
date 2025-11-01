@@ -27,10 +27,7 @@ export class ShopifyExporter extends BaseExporter {
       warnings.push('Description is missing - will use placeholder');
     }
 
-    // Price validation
-    if (!listing.base?.price || listing.base.price <= 0) {
-      warnings.push('Price is missing or invalid - please set a valid price');
-    }
+    // Price validation removed - price field is no longer used in the application
 
     // Image validation
     if (!content.images || content.images.length === 0) {
@@ -206,12 +203,7 @@ export class ShopifyExporter extends BaseExporter {
         status: content.tags.length >= 3 ? 'pass' : 'warning',
         message: content.tags.length < 3 ? 'Consider adding more tags for better discoverability' : undefined,
       },
-      {
-        name: 'Price',
-        description: 'Price must be valid',
-        status: listing.base.price > 0 ? 'pass' : 'fail',
-        message: listing.base.price <= 0 ? 'Invalid price' : undefined,
-      },
+      // Price preflight check removed - price field is no longer used in the application
     ];
   }
 

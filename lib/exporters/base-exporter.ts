@@ -131,7 +131,10 @@ export abstract class BaseExporter {
   /**
    * Format price for export
    */
-  protected formatPrice(price: number): string {
+  protected formatPrice(price: number | undefined | null): string {
+    if (price == null || isNaN(price)) {
+      return '0.00';
+    }
     return price.toFixed(2);
   }
 

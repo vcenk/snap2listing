@@ -60,10 +60,7 @@ export class AmazonChecker extends BaseExporter {
       warnings.push(`Amazon recommends at least 5 images (current: ${content.images.length})`);
     }
 
-    // Price validation
-    if (!listing.base.price || listing.base.price <= 0) {
-      errors.push('Valid price is required for Amazon');
-    }
+    // Price validation removed - price field is no longer used in the application
 
     return {
       isReady: errors.length === 0,
@@ -262,12 +259,7 @@ For questions: https://snap2listing.com/support
         status: content.images.length >= 5 ? 'pass' : 'warning',
         message: content.images.length < 5 ? `${content.images.length} images (recommended: 5+)` : undefined,
       },
-      {
-        name: 'Price',
-        description: 'Competitive pricing is crucial',
-        status: listing.base.price > 0 ? 'pass' : 'fail',
-        message: listing.base.price <= 0 ? 'Invalid price' : undefined,
-      },
+      // Price preflight check removed - price field is no longer used in the application
     ];
   }
 
