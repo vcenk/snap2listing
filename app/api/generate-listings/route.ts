@@ -87,9 +87,6 @@ async function enhanceListingsWithAI(listings: any[], input: ProductInput) {
 
   for (const listing of listings) {
     try {
-      console.log(`\n🤖 Generating AI content for ${listing.channel}...`);
-      console.log(`Image URL type: ${input.image.startsWith('http') ? 'HTTP' : input.image.startsWith('data:') ? 'Data URL' : 'Other'}`);
-      
       // Use AI generation for ALL channels
       const openAIResult = await generateChannelListing({
         productImageUrl: input.image,
@@ -104,8 +101,6 @@ async function enhanceListingsWithAI(listings: any[], input: ProductInput) {
           size: input.attributes?.size,
         },
       });
-
-      console.log(`✅ AI generated for ${listing.channel}:`, JSON.stringify(openAIResult, null, 2));
 
       // Replace template-based generation with AI result
       listing.ai_generated = {
@@ -126,18 +121,16 @@ async function enhanceListingsWithAI(listings: any[], input: ProductInput) {
       enhanced.push(listing);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`❌ Error enhancing listing for ${listing.channel}:`, errorMsg);
-      console.error('Full error:', error);
+      console.error(`Error enhancing listing for ${listing.channel}:`, errorMsg);
       errors.push(`${listing.channel}: ${errorMsg}`);
-      
+
       // Keep the basic template-generated version if AI enhancement fails
-      console.warn(`⚠️  Using template-based fallback for ${listing.channel}`);
       enhanced.push(listing);
     }
   }
 
   if (errors.length > 0) {
-    console.error(`\n⚠️  AI generation failed for ${errors.length} channel(s):\n`, errors.join('\n'));
+    console.error(`AI generation failed for ${errors.length} channel(s):`, errors.join(', '));
   }
 
   return enhanced;

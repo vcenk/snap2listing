@@ -114,8 +114,6 @@ Return ONLY valid JSON in this exact format:
           detail: 'low', // Use low detail to save tokens
         },
       });
-    } else {
-      console.log('Skipping image URL (not HTTP):', input.productImageUrl?.substring(0, 50));
     }
 
     const response = await openai.chat.completions.create({
@@ -134,8 +132,6 @@ Return ONLY valid JSON in this exact format:
       temperature: 0.7,
       max_tokens: 1000,
     });
-
-    console.log('OpenAI Response:', JSON.stringify(response, null, 2));
 
     const content = response.choices?.[0]?.message?.content;
     if (!content) {
