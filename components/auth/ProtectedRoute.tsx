@@ -10,8 +10,12 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const router = useRouter();
 
   useEffect(() => {
+    console.log('🛡️ ProtectedRoute check - Loading:', loading, 'User:', user?.email || 'null');
     if (!loading && !user) {
+      console.log('❌ No user found, redirecting to /login');
       router.push('/login');
+    } else if (!loading && user) {
+      console.log('✅ User authenticated, allowing access');
     }
   }, [user, loading, router]);
 
