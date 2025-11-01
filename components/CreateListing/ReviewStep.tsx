@@ -23,6 +23,10 @@ import {
   ListItemText,
   Tabs,
   Tab,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  IconButton,
 } from '@mui/material';
 import { useState } from 'react';
 import SaveIcon from '@mui/icons-material/Save';
@@ -32,6 +36,8 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import StoreIcon from '@mui/icons-material/Store';
+import DownloadIcon from '@mui/icons-material/Download';
+import CloseIcon from '@mui/icons-material/Close';
 import { GeneratedImage, GeneratedVideo } from '@/lib/types';
 import { ListingBase, ChannelOverride, Channel } from '@/lib/types/channels';
 
@@ -73,6 +79,7 @@ export default function ReviewStep({
 }: ReviewStepProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedChannelTab, setSelectedChannelTab] = useState(0);
+  const [previewImage, setPreviewImage] = useState<{ url: string; index: number } | null>(null);
 
   const handleExport = async () => {
     if (!listingId) {
@@ -128,6 +135,21 @@ export default function ReviewStep({
 
     if (onExport) {
       onExport();
+    }
+  };
+
+  const downloadImage = (url: string, index: number) => {
+    try {
+      const downloadUrl = `/api/download-image?url=${encodeURIComponent(url)}`;
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `product-image-${index + 1}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      alert('Failed to download image. Please try again.');
     }
   };
 
@@ -264,17 +286,43 @@ export default function ReviewStep({
               {/* Main Image */}
               <Box
                 sx={{
+                  position: 'relative',
                   mb: 3,
                   borderRadius: 3,
                   overflow: 'hidden',
                   boxShadow: 2,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    transform: 'scale(1.02)',
+                    boxShadow: 4,
+                  },
                 }}
+                onClick={() => setPreviewImage({ url: images[0]?.url, index: 0 })}
               >
                 <img
                   src={images[0]?.url}
                   alt="Main product"
                   style={{ width: '100%', maxHeight: 400, objectFit: 'cover' }}
                 />
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadImage(images[0]?.url, 0);
+                  }}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    bgcolor: 'rgba(255, 255, 255, 0.9)',
+                    '&:hover': {
+                      bgcolor: 'white',
+                    },
+                  }}
+                >
+                  <DownloadIcon fontSize="small" />
+                </IconButton>
               </Box>
 
               {/* Additional Images */}
@@ -284,14 +332,44 @@ export default function ReviewStep({
                     Additional Images ({images.length - 1})
                   </Typography>
                   <ImageList cols={4} gap={8}>
-                    {images.slice(1).map((img) => (
-                      <ImageListItem key={img.id}>
+                    {images.slice(1).map((img, idx) => (
+                      <ImageListItem
+                        key={img.id}
+                        sx={{
+                          position: 'relative',
+                          cursor: 'pointer',
+                          transition: 'transform 0.2s ease',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                          },
+                        }}
+                        onClick={() => setPreviewImage({ url: img.url, index: idx + 1 })}
+                      >
                         <img
                           src={img.url}
                           alt="Product"
                           loading="lazy"
                           style={{ borderRadius: 8, aspectRatio: '1/1', objectFit: 'cover' }}
                         />
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadImage(img.url, idx + 1);
+                          }}
+                          sx={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            bgcolor: 'rgba(255, 255, 255, 0.9)',
+                            '&:hover': {
+                              bgcolor: 'white',
+                            },
+                            padding: '4px',
+                          }}
+                        >
+                          <DownloadIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
                       </ImageListItem>
                     ))}
                   </ImageList>
@@ -603,6 +681,56 @@ export default function ReviewStep({
           </Stack>
         </Stack>
       </Stack>
+
+      {/* Image Preview Dialog */}
+      <Dialog
+        open={previewImage !== null}
+        onClose={() => setPreviewImage(null)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 0, position: 'relative', bgcolor: 'black' }}>
+          <IconButton
+            onClick={() => setPreviewImage(null)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'white',
+              bgcolor: 'rgba(0,0,0,0.5)',
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.7)',
+              },
+              zIndex: 1,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          {previewImage && (
+            <Box
+              component="img"
+              src={previewImage.url}
+              alt={`Product image ${previewImage.index + 1}`}
+              sx={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: '85vh',
+                objectFit: 'contain',
+              }}
+            />
+          )}
+        </DialogContent>
+        <DialogActions sx={{ bgcolor: 'background.paper' }}>
+          {previewImage && (
+            <Button
+              startIcon={<DownloadIcon />}
+              onClick={() => downloadImage(previewImage.url, previewImage.index)}
+            >
+              Download
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

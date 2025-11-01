@@ -16,11 +16,16 @@ import {
   CardContent,
   Grid,
   IconButton,
+  Dialog,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ImageIcon from '@mui/icons-material/Image';
 import CreateIcon from '@mui/icons-material/Create';
 import CategoryIcon from '@mui/icons-material/Category';
+import DownloadIcon from '@mui/icons-material/Download';
+import CloseIcon from '@mui/icons-material/Close';
 import { motion } from 'framer-motion';
 import MockupEditor from './MockupEditor';
 import MockupEditorFullPage from './MockupEditorFullPage';
@@ -51,6 +56,7 @@ export default function PodWorkflow({ onBack }: PodWorkflowProps) {
   const [mockupUrls, setMockupUrls] = useState<string[]>([]);
   const [mockupEditorOpen, setMockupEditorOpen] = useState(false);
   const [listingId] = useState(() => `pod_${Date.now()}`);
+  const [previewImage, setPreviewImage] = useState<{ url: string; index: number } | null>(null);
 
   const steps = [
     {
@@ -116,6 +122,21 @@ export default function PodWorkflow({ onBack }: PodWorkflowProps) {
     setActiveStep('dashboard');
     setSelectedCollection(null);
     setSelectedProductType(null);
+  };
+
+  const downloadImage = (url: string, index: number) => {
+    try {
+      const downloadUrl = `/api/download-image?url=${encodeURIComponent(url)}`;
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `pod-mockup-${index + 1}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      alert('Failed to download image. Please try again.');
+    }
   };
 
   // If in dashboard step, show full dashboard
@@ -383,7 +404,15 @@ export default function PodWorkflow({ onBack }: PodWorkflowProps) {
                           overflow: 'hidden',
                           border: '2px solid',
                           borderColor: 'divider',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                            boxShadow: 4,
+                            borderColor: 'primary.main',
+                          },
                         }}
+                        onClick={() => setPreviewImage({ url, index })}
                       >
                         <img
                           src={url}
@@ -397,6 +426,24 @@ export default function PodWorkflow({ onBack }: PodWorkflowProps) {
                             objectFit: 'cover',
                           }}
                         />
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadImage(url, index);
+                          }}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            bgcolor: 'rgba(255, 255, 255, 0.9)',
+                            '&:hover': {
+                              bgcolor: 'white',
+                            },
+                          }}
+                        >
+                          <DownloadIcon fontSize="small" />
+                        </IconButton>
                       </Box>
                     </Grid>
                   ))}
@@ -449,6 +496,56 @@ export default function PodWorkflow({ onBack }: PodWorkflowProps) {
         userId={user?.id || 'guest'}
         listingId={listingId}
       />
+
+      {/* Image Preview Dialog */}
+      <Dialog
+        open={previewImage !== null}
+        onClose={() => setPreviewImage(null)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 0, position: 'relative', bgcolor: 'black' }}>
+          <IconButton
+            onClick={() => setPreviewImage(null)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'white',
+              bgcolor: 'rgba(0,0,0,0.5)',
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.7)',
+              },
+              zIndex: 1,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          {previewImage && (
+            <Box
+              component="img"
+              src={previewImage.url}
+              alt={`Mockup ${previewImage.index + 1}`}
+              sx={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: '85vh',
+                objectFit: 'contain',
+              }}
+            />
+          )}
+        </DialogContent>
+        <DialogActions sx={{ bgcolor: 'background.paper' }}>
+          {previewImage && (
+            <Button
+              startIcon={<DownloadIcon />}
+              onClick={() => downloadImage(previewImage.url, previewImage.index)}
+            >
+              Download
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
