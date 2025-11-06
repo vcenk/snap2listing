@@ -70,12 +70,20 @@ export interface ValidationRules {
 // LISTING DATA TYPES
 // ============================================
 
+export interface ImageMetadata {
+  url: string;
+  altText?: string;
+  prompt?: string;
+  position?: number;
+}
+
 export interface ListingBase {
   title: string;
   description: string;
   price: number;
   category: string;
-  images: string[];
+  images: string[];  // Array of URLs (for backward compatibility)
+  imageMetadata?: ImageMetadata[];  // Array of image metadata including alt text
   video?: string;
   originalImage?: string;
   quantity?: number;

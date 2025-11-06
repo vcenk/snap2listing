@@ -98,12 +98,18 @@ export class ShopifyExporter extends BaseExporter {
 
     const rows: any[][] = [];
 
-    // If there are images, create a row for each image
-    // Otherwise, create a single row
-    const imagesToProcess = content.images.length > 0 ? content.images : [''];
+    // Use imageMetadata if available (includes alt text), otherwise fall back to images array
+    const useMetadata = listing.base.imageMetadata && listing.base.imageMetadata.length > 0;
+    const imagesToProcess = useMetadata
+      ? listing.base.imageMetadata
+      : content.images.length > 0
+      ? content.images.map((url, idx) => ({ url, altText: content.title, position: idx }))
+      : [{ url: '', altText: content.title, position: 0 }];
 
-    imagesToProcess.forEach((imageUrl, index) => {
+    imagesToProcess.forEach((imageData, index) => {
       const isFirstRow = index === 0;
+      const imageUrl = typeof imageData === 'string' ? imageData : imageData.url;
+      const imageAlt = typeof imageData === 'string' ? content.title : (imageData.altText || content.title);
 
       rows.push([
         isFirstRow ? handle : '', // Handle (only first row)
@@ -128,7 +134,7 @@ export class ShopifyExporter extends BaseExporter {
         '', // Variant Barcode
         imageUrl, // Image Src
         index + 1, // Image Position
-        content.title, // Image Alt Text
+        imageAlt, // Image Alt Text (now using proper alt text!)
         'false', // Gift Card
         isFirstRow ? content.title : '', // SEO Title
         isFirstRow ? this.truncate(this.stripHTML(content.description), 320) : '', // SEO Description

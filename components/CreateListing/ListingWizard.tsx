@@ -533,9 +533,26 @@ export default function ListingWizard({ initialData, isEditMode = false }: Listi
   // Step 2/3: Images Complete
   const handleImagesComplete = (images: GeneratedImage[]) => {
     setGeneratedImages(images);
+
+    // Create image metadata array with alt text
+    const imageMetadata = images.map((img, index) => ({
+      url: img.url,
+      altText: img.altText,
+      prompt: img.prompt,
+      position: index + 1,  // Start from 1 (uploaded image is 0)
+    }));
+
+    // Add uploaded image metadata as first item
+    const uploadedImageMetadata = {
+      url: uploadedImage,
+      altText: baseData.title || 'Product image',
+      position: 0,
+    };
+
     setBaseData({
       ...baseData,
-      images: [uploadedImage, ...images.map((img) => img.url)],
+      images: [uploadedImage, ...images.map((img) => img.url)],  // Keep for backward compatibility
+      imageMetadata: [uploadedImageMetadata, ...imageMetadata],  // Store metadata with alt text
     });
     // Physical: Images (step 3) → Video (step 4)
     // Digital: Images (step 2) → Video (step 3)

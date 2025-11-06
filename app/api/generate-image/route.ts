@@ -5,21 +5,55 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 
 /**
  * Generate SEO-friendly alt text from prompt and product name
+ * Alt text should be descriptive, accessible, and free of technical prompt instructions
  */
 function generateAltText(prompt: string, productName?: string): string {
-  // Remove common prompt artifacts
+  // Remove technical prompt instructions that shouldn't be in alt text
   let altText = prompt
+    // Remove instructions about keeping the product the same
+    .replace(/Keep the exact same product from the reference image with no modifications\.?\s*/gi, '')
+    .replace(/Only change background,?\s*(lighting,?)?\s*(or)?\s*camera angle\.?\s*/gi, '')
+    .replace(/same product,?\s*/gi, '')
+
+    // Replace [PRODUCT] placeholder with actual product name
     .replace(/\[PRODUCT\]/gi, productName || 'product')
-    .replace(/,\s*(4k|high quality|professional|studio lighting|white background)/gi, '')
+
+    // Remove technical image quality terms (keep them out of alt text)
+    .replace(/,?\s*(4k|8k|high quality|high resolution|professional|hd|uhd)/gi, '')
+
+    // Clean up photography/lighting terms to be more natural
+    .replace(/studio lighting/gi, 'well-lit')
+    .replace(/white background/gi, 'on white background')
+    .replace(/clean background/gi, 'on clean background')
+    .replace(/neutral background/gi, 'on neutral background')
+
+    // Remove extra commas and spaces
+    .replace(/,\s*,/g, ',')
+    .replace(/\s+,/g, ',')
+    .replace(/,\s+/g, ', ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
+
+    // Remove leading/trailing commas
+    .replace(/^,\s*/, '')
+    .replace(/,\s*$/, '');
+
+  // If we have a product name but it's not in the alt text, prepend it
+  if (productName && !altText.toLowerCase().includes(productName.toLowerCase())) {
+    altText = `${productName}, ${altText}`;
+  }
 
   // Capitalize first letter
   altText = altText.charAt(0).toUpperCase() + altText.slice(1);
 
+  // Ensure proper sentence ending
+  if (!altText.match(/[.!?]$/)) {
+    altText = altText + '.';
+  }
+
   // Limit to 125 characters for optimal SEO
   if (altText.length > 125) {
-    altText = altText.substring(0, 122) + '...';
+    altText = altText.substring(0, 122).trim() + '...';
   }
 
   return altText;
