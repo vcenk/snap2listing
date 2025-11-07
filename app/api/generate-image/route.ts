@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateImage, upscaleImage } from '@/lib/api/fal';
 import { uploadFromUrl } from '@/lib/api/storage';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { deductCredits, checkCreditsAvailable } from '@/lib/services/creditTracking';
 
 /**
  * Generate SEO-friendly alt text from prompt and product name
@@ -91,17 +92,17 @@ export async function POST(request: NextRequest) {
           .join(', ')
       : negativePrompt || '';
 
-    // Check usage limits
+    // FIXED: Check credit availability before generating (3 credits per image)
     if (userId) {
-      const { data: canGenerate } = await supabaseAdmin.rpc('can_generate_image', {
-        p_user_id: userId,
-      });
+      const creditCheck = await checkCreditsAvailable(userId, 'image_generation', 1);
 
-      if (!canGenerate) {
+      if (!creditCheck.available) {
         return NextResponse.json(
           {
-            error: 'Image limit reached',
-            message: 'You have reached your monthly image limit. Please upgrade your plan or purchase add-ons.',
+            error: 'Insufficient credits',
+            message: creditCheck.error || 'You do not have enough credits. Please upgrade your plan or purchase add-ons.',
+            creditsNeeded: creditCheck.creditsNeeded,
+            creditsRemaining: creditCheck.creditsRemaining,
             upgrade: true,
           },
           { status: 403 }
@@ -145,11 +146,16 @@ export async function POST(request: NextRequest) {
       result.images[0].content_type || 'image/jpeg'
     );
 
-    // Increment usage counter immediately after successful generation
+    // FIXED: Deduct credits after successful generation (3 credits per image)
     if (userId) {
-      await supabaseAdmin.rpc('increment_image_usage', {
-        p_user_id: userId,
-      });
+      const deductionResult = await deductCredits(userId, 'image_generation', 1);
+
+      if (!deductionResult.success) {
+        console.error('Credit deduction failed (non-fatal):', deductionResult.error);
+        // Non-fatal - image already generated, log the issue
+      } else {
+        console.log(`✅ Credits deducted: ${deductionResult.creditsDeducted}, Remaining: ${deductionResult.creditsRemaining}`);
+      }
     }
 
     const id = `img_${Date.now()}`;
