@@ -288,6 +288,7 @@ export default function ListingWizard({ initialData, isEditMode = false }: Listi
           images: [data.uploadedImage],
           quantity: 1,
           originalImage: data.uploadedImage,
+          productType: productType || 'physical', // FIXED: Set productType for physical/digital
         });
 
         // Pre-populate channel overrides with AI content
@@ -308,7 +309,7 @@ export default function ListingWizard({ initialData, isEditMode = false }: Listi
         setChannelOverrides(newOverrides);
       }
     } else {
-      // No AI data, use defaults
+      // No AI data, use defaults - FIXED: Added productType
       setBaseData({
         title: data.uploadedImageName,
         description: data.shortDescription,
@@ -317,6 +318,7 @@ export default function ListingWizard({ initialData, isEditMode = false }: Listi
         images: [data.uploadedImage],
         quantity: 1,
         originalImage: data.uploadedImage,
+        productType: productType || 'physical', // FIXED: Set productType for physical/digital
       });
     }
 
@@ -502,9 +504,13 @@ export default function ListingWizard({ initialData, isEditMode = false }: Listi
     baseData: ListingBase;
     channelOverrides: ChannelOverride[];
   }) => {
-    setBaseData(data.baseData);
+    // FIXED: Ensure productType is preserved when updating baseData
+    setBaseData({
+      ...data.baseData,
+      productType: data.baseData.productType || productType || 'physical',
+    });
     setChannelOverrides(data.channelOverrides);
-    
+
     // Update category and price if changed
     if (data.baseData.category) {
       setCategory(data.baseData.category);
