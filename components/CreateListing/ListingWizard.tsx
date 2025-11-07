@@ -92,6 +92,7 @@ export default function ListingWizard({ initialData, isEditMode = false }: Listi
   const router = useRouter();
   const toast = useToast();
   const { user } = useAuth();
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   // For edit mode, detect product type from initialData and start at review step
   const [activeStep, setActiveStep] = useState<WizardStep>(
@@ -380,22 +381,27 @@ export default function ListingWizard({ initialData, isEditMode = false }: Listi
 
       setChannelOverrides(basicOverrides);
 
-      // Try to generate AI descriptions in background (don't block UI)
+      // CRITICAL FIX: Generate AI descriptions and WAIT for them (blocking)
       if (selectedChannelIds.length > 0) {
-        // Generate AI in background - non-blocking
-        generateAIDescriptions(allMockups[0], selectedChannelIds).catch(err => {
-          console.warn('Background AI generation failed:', err);
-        });
+        console.log('🔄 Waiting for AI to analyze artwork and mockup...');
+        toast.info('Analyzing artwork with AI...');
+        try {
+          await generateAIDescriptions(allMockups[0], selectedChannelIds);
+          console.log('✅ AI generation complete, showing continue prompt');
+        } catch (err) {
+          console.warn('⚠️ AI generation failed, using default content:', err);
+        }
       }
 
-      // Show continue prompt after mockups are created
+      // Show continue prompt AFTER AI generation completes
       setShowPodContinuePrompt(true);
     }
   };
 
-  // Background AI generation helper
+  // Background AI generation helper - FIXED: Now properly uses toast from hook
   const generateAIDescriptions = async (imageUrl: string, channelIds: string[]) => {
     try {
+      setAiGenerating(true);
       console.log('🤖 Generating AI descriptions in background...');
       console.log('Image URL:', imageUrl);
       console.log('Channel IDs:', channelIds);
@@ -439,6 +445,7 @@ export default function ListingWizard({ initialData, isEditMode = false }: Listi
           ...prev,
           title: aiGenerated.title || firstListing.title || prev.title,
           description: aiGenerated.description || firstListing.description || prev.description,
+          productType: 'pod', // Ensure product type is set for POD listings
         }));
 
         // Create channel overrides with AI-generated content
@@ -465,13 +472,17 @@ export default function ListingWizard({ initialData, isEditMode = false }: Listi
         setChannelOverrides(enhancedOverrides);
         setAiGeneratedListings(result.listings);
 
-        // Show success message
-        showToast('AI descriptions generated successfully!', 'success');
+        // FIXED: Use toast from useToast hook
+        toast.success('AI descriptions generated successfully!');
       } else {
         console.warn('⚠️ AI generation failed:', result.error || 'No listings returned');
+        toast.warning('AI generation failed, using default content');
       }
     } catch (error) {
       console.error('❌ Background AI generation error:', error);
+      toast.error('Failed to generate AI content');
+    } finally {
+      setAiGenerating(false);
     }
   };
 
