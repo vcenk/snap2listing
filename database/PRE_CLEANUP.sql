@@ -118,12 +118,12 @@ ORDER BY tablename;
 -- List remaining functions (should be empty)
 SELECT
     'Remaining functions:' as status,
-    proname as function_name,
-    pg_get_function_identity_arguments(oid) as arguments
+    p.proname as function_name,
+    pg_get_function_identity_arguments(p.oid) as arguments
 FROM pg_proc p
 JOIN pg_namespace n ON p.pronamespace = n.oid
 WHERE n.nspname = 'public'
-ORDER BY proname;
+ORDER BY p.proname;
 
 -- ============================================================================
 -- PRE-CLEANUP COMPLETE
