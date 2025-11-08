@@ -41,16 +41,21 @@ DROP TABLE IF EXISTS listings_exports CASCADE;
 DROP TABLE IF EXISTS ai_generation_history CASCADE;
 DROP TABLE IF EXISTS usage_logs CASCADE;
 
--- Drop functions
-DROP FUNCTION IF EXISTS deduct_credits CASCADE;
-DROP FUNCTION IF EXISTS is_trial_expired CASCADE;
-DROP FUNCTION IF EXISTS get_trial_days_remaining CASCADE;
-DROP FUNCTION IF EXISTS add_image_quota CASCADE;
-DROP FUNCTION IF EXISTS add_video_quota CASCADE;
-DROP FUNCTION IF EXISTS increment_usage CASCADE;
-DROP FUNCTION IF EXISTS can_generate_video CASCADE;
-DROP FUNCTION IF EXISTS increment_video_usage CASCADE;
-DROP FUNCTION IF EXISTS handle_new_user CASCADE;
+-- Drop functions (with all possible signatures to handle duplicates)
+DROP FUNCTION IF EXISTS deduct_credits(UUID, INTEGER, TEXT, UUID, JSONB) CASCADE;
+DROP FUNCTION IF EXISTS deduct_credits(UUID, INTEGER, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS deduct_credits(UUID, INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS is_trial_expired(UUID) CASCADE;
+DROP FUNCTION IF EXISTS get_trial_days_remaining(UUID) CASCADE;
+DROP FUNCTION IF EXISTS add_image_quota(UUID, INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS add_video_quota(UUID, INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS increment_usage(UUID, INTEGER, INTEGER) CASCADE;
+DROP FUNCTION IF EXISTS increment_usage(UUID) CASCADE;
+DROP FUNCTION IF EXISTS can_generate_video(UUID) CASCADE;
+DROP FUNCTION IF EXISTS increment_video_usage(UUID) CASCADE;
+DROP FUNCTION IF EXISTS can_generate_image(UUID) CASCADE;
+DROP FUNCTION IF EXISTS increment_image_usage(UUID) CASCADE;
+DROP FUNCTION IF EXISTS handle_new_user() CASCADE;
 
 -- Drop triggers
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
