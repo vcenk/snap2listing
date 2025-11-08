@@ -51,7 +51,8 @@
       "Bash(npx tsc:*)",
       "Bash(cat:*)",
       "Bash(findstr:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
