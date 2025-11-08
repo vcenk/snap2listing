@@ -74,7 +74,7 @@ export default function PricingTable({ onSelectPlan, showYearlyToggle = true }: 
           alignItems: 'stretch',
         }}
       >
-        {PLANS.map((plan) => (
+        {PLANS.filter(plan => plan.id !== 'free').map((plan) => (
           <Card
             key={plan.id}
             sx={{

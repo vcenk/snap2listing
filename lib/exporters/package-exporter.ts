@@ -25,28 +25,62 @@ export async function generatePackageExport(
   const wordBuffer = await Packer.toBuffer(wordDoc);
   zip.file(`${sanitizeFileName(listing.base.title)}_${channel.name}.docx`, wordBuffer);
 
-  // 2. Download and add all images
+  // 2. Download and add all images - FIXED with better error handling and placeholders
   const imagesFolder = zip.folder('images');
   if (imagesFolder && listing.base.images && listing.base.images.length > 0) {
-    console.log(`📦 Downloading ${listing.base.images.length} images for export...`);
+    console.log(`\n📦 Downloading ${listing.base.images.length} images for export...`);
+
+    let successCount = 0;
+    let failCount = 0;
+    const errors: string[] = [];
+
     for (let i = 0; i < listing.base.images.length; i++) {
       const imageUrl = listing.base.images[i];
-      console.log(`⬇️ Downloading image ${i + 1}:`, imageUrl);
+      console.log(`\n[${i + 1}/${listing.base.images.length}] ${imageUrl}`);
+
       try {
         const imageBlob = await downloadImage(imageUrl);
         const extension = getImageExtension(imageUrl);
-        imagesFolder.file(`image_${i + 1}.${extension}`, imageBlob);
-        console.log(`✅ Successfully added image ${i + 1} to ZIP`);
+        const filename = `image_${i + 1}.${extension}`;
+
+        imagesFolder.file(filename, imageBlob);
+        successCount++;
+        console.log(`✅ Added ${filename} (${imageBlob.size} bytes)`);
       } catch (error) {
-        console.error(`❌ Failed to download image ${i + 1}:`, error);
-        console.error('Image URL:', imageUrl);
-        console.error('Error details:', error instanceof Error ? error.message : String(error));
+        failCount++;
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        errors.push(`Image ${i + 1}: ${errorMsg}`);
+
+        console.error(`❌ Failed: ${errorMsg}`);
+
+        // Add error placeholder so user knows which image failed
+        imagesFolder.file(
+          `ERROR_image_${i + 1}.txt`,
+          `Failed to download this image automatically.\n\n` +
+          `URL: ${imageUrl}\n\n` +
+          `Error: ${errorMsg}\n\n` +
+          `Please download this image manually from your listing.`
+        );
       }
     }
+
+    console.log(`\n📊 Summary: ${successCount} succeeded, ${failCount} failed out of ${listing.base.images.length}`);
+
+    if (errors.length > 0) {
+      // Add summary of all errors
+      imagesFolder.file(
+        'DOWNLOAD_ERRORS.txt',
+        `Some images could not be downloaded automatically.\n\n` +
+        `Successful: ${successCount}/${listing.base.images.length}\n` +
+        `Failed: ${failCount}/${listing.base.images.length}\n\n` +
+        `Errors:\n${errors.map(e => `- ${e}`).join('\n')}\n\n` +
+        `Please download the failed images manually from your listing preview.`
+      );
+    }
   } else {
-    console.warn('⚠️ No images folder or no images to export');
-    console.log('Images folder exists:', !!imagesFolder);
-    console.log('Images array:', listing.base.images);
+    console.warn('⚠️ No images to export');
+    console.log('  Images array:', listing.base.images);
+    console.log('  Count:', listing.base.images?.length || 0);
   }
 
   // 3. Add CSV file if provided (for bulk upload)

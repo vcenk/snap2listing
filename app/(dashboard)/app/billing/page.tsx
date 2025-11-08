@@ -46,6 +46,19 @@ export default function BillingPage() {
   const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
+    // FIXED: Refresh session when returning from Stripe Checkout
+    // This ensures the session is still valid after third-party redirect
+    const refreshSession = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Session refresh error:', error);
+      } else if (data.session) {
+        console.log('✅ Session refreshed successfully');
+      }
+    };
+
+    refreshSession();
+
     if (user) {
       fetchUserData();
     }
