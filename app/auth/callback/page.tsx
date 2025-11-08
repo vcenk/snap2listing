@@ -13,19 +13,40 @@ function AuthCallbackContent() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get the session from the URL hash (implicit flow)
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('🔄 OAuth callback started...');
+        console.log('📍 URL:', window.location.href);
+        console.log('🔑 Search params:', Object.fromEntries(searchParams.entries()));
 
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          setError(sessionError.message);
-          setTimeout(() => router.push('/login'), 3000);
-          return;
-        }
+        // Check if we have an authorization code (PKCE flow)
+        const code = searchParams.get('code');
 
-        if (session) {
+        if (code) {
+          console.log('✅ Authorization code found, exchanging for session...');
+
+          // Exchange the code for a session (PKCE flow)
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (exchangeError) {
+            console.error('❌ Code exchange error:', exchangeError);
+            setError(exchangeError.message);
+            setTimeout(() => router.push('/login'), 3000);
+            return;
+          }
+
+          if (!data.session) {
+            console.error('❌ No session after code exchange');
+            setError('Failed to create session. Please try again.');
+            setTimeout(() => router.push('/login'), 3000);
+            return;
+          }
+
+          console.log('✅ Session created successfully!');
+          const { session } = data;
+
           // Create or update user record in database
           const { user } = session;
+          console.log('📝 Creating/updating user record for:', user.email);
+
           const { error: dbError } = await supabase
             .from('users')
             .upsert({
@@ -41,20 +62,41 @@ function AuthCallbackContent() {
             });
 
           if (dbError && dbError.code !== '23505') {
-            console.error('Error creating/updating user record:', dbError);
+            console.error('⚠️ Error creating/updating user record:', dbError);
             // Continue anyway - user is authenticated
+          } else {
+            console.log('✅ User record created/updated');
           }
 
           // Get redirect URL from query params or default to overview
           const next = searchParams.get('next') || '/app/overview';
+          console.log('🚀 Redirecting to:', next);
           router.push(next);
         } else {
-          // No session found
-          setError('No session found. Please try again.');
-          setTimeout(() => router.push('/login'), 3000);
+          // Fallback: Try to get existing session (for older flows or edge cases)
+          console.log('ℹ️ No code parameter, checking for existing session...');
+
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+          if (sessionError) {
+            console.error('❌ Session error:', sessionError);
+            setError(sessionError.message);
+            setTimeout(() => router.push('/login'), 3000);
+            return;
+          }
+
+          if (session) {
+            console.log('✅ Existing session found, redirecting...');
+            const next = searchParams.get('next') || '/app/overview';
+            router.push(next);
+          } else {
+            console.error('❌ No code and no session found');
+            setError('No authorization code found. Please try signing in again.');
+            setTimeout(() => router.push('/login'), 3000);
+          }
         }
       } catch (err: any) {
-        console.error('Auth callback error:', err);
+        console.error('❌ Auth callback error:', err);
         setError(err.message || 'Authentication failed');
         setTimeout(() => router.push('/login'), 3000);
       }
