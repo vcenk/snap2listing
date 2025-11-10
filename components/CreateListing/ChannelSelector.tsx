@@ -70,8 +70,8 @@ export default function ChannelSelector({
         console.log('✅ Channels loaded:', data.channels?.length, 'channels');
         console.log('📋 Channel details:', data.channels);
 
-        setChannels(data.channels);
-        if (onChannelsLoaded) {
+        setChannels(data.channels || []);
+        if (onChannelsLoaded && data.channels) {
           onChannelsLoaded(data.channels);
         }
       } catch (err) {
@@ -82,8 +82,9 @@ export default function ChannelSelector({
       }
     };
 
+    console.log('⚡ useEffect triggered - fetching channels');
     fetchChannels();
-  }, [onChannelsLoaded]);
+  }, []); // Remove onChannelsLoaded dependency to prevent re-fetching
 
   const handleToggle = (channelId: string) => {
     const updated = selectedChannels.includes(channelId)
