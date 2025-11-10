@@ -20,11 +20,16 @@ export interface Channel {
 }
 
 export interface ChannelConfig {
-  fields: string[];
+  fields?: string[];
   description?: string;
   requiredFields?: string[];
   maxLengths?: Record<string, number>;
+  maxTitleLength?: number;
+  maxDescriptionLength?: number;
+  maxTags?: number;
+  maxBullets?: number;
   customRules?: Record<string, any>;
+  [key: string]: any; // Allow additional properties from database
 }
 
 export interface ValidationRules {
@@ -41,14 +46,17 @@ export interface ValidationRules {
   tags?: {
     min?: number;
     max?: number;
+    required?: boolean;
   };
   images?: {
     min?: number;
     max?: number;
+    required?: boolean;
   };
   bullets?: {
     required?: boolean;
     count?: number;
+    max?: number;
     minLength?: number;
     maxLength?: number;
   };
@@ -57,6 +65,16 @@ export interface ValidationRules {
     min?: number;
     max?: number;
   };
+  category?: {
+    required?: boolean;
+  };
+  materials?: {
+    max?: number;
+  };
+  video?: {
+    recommended?: boolean;
+    required?: boolean;
+  };
   condition?: {
     required?: boolean;
     allowed?: string[];
@@ -64,6 +82,7 @@ export interface ValidationRules {
   availability?: {
     required?: boolean;
   };
+  [key: string]: any; // Allow additional validation rules
 }
 
 // ============================================
