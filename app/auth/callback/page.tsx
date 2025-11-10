@@ -11,6 +11,9 @@ function AuthCallbackContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+    let redirectTimeout: NodeJS.Timeout;
+
     const handleCallback = async () => {
       try {
         console.log('🔄 OAuth callback started...');
@@ -28,15 +31,19 @@ function AuthCallbackContent() {
 
           if (exchangeError) {
             console.error('❌ Code exchange error:', exchangeError);
-            setError(exchangeError.message);
-            setTimeout(() => router.push('/login'), 3000);
+            if (mounted) setError(exchangeError.message);
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 3000);
             return;
           }
 
           if (!data.session) {
             console.error('❌ No session after code exchange');
-            setError('Failed to create session. Please try again.');
-            setTimeout(() => router.push('/login'), 3000);
+            if (mounted) setError('Failed to create session. Please try again.');
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 3000);
             return;
           }
 
@@ -47,31 +54,42 @@ function AuthCallbackContent() {
           const { user } = session;
           console.log('📝 Creating/updating user record for:', user.email);
 
-          const { error: dbError } = await supabase
-            .from('users')
-            .upsert({
-              id: user.id,
-              email: user.email,
-              name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0],
-              plan_id: 'free',
-              subscription_status: 'active',
-              last_login: new Date().toISOString(),
-            }, {
-              onConflict: 'id',
-              ignoreDuplicates: false,
-            });
+          try {
+            const { error: dbError } = await supabase
+              .from('users')
+              .upsert({
+                id: user.id,
+                email: user.email,
+                name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0],
+                plan_id: 'free',
+                subscription_status: 'active',
+                last_login: new Date().toISOString(),
+              }, {
+                onConflict: 'id',
+                ignoreDuplicates: false,
+              });
 
-          if (dbError && dbError.code !== '23505') {
-            console.error('⚠️ Error creating/updating user record:', dbError);
-            // Continue anyway - user is authenticated
-          } else {
-            console.log('✅ User record created/updated');
+            if (dbError && dbError.code !== '23505') {
+              console.error('⚠️ Error creating/updating user record:', dbError);
+              // Continue anyway - user is authenticated
+            } else {
+              console.log('✅ User record created/updated');
+            }
+          } catch (dbErr) {
+            console.error('⚠️ Database error (non-critical):', dbErr);
+            // Continue - user is authenticated even if DB update fails
           }
 
           // Get redirect URL from query params or default to overview
           const next = searchParams.get('next') || '/app/overview';
           console.log('🚀 Redirecting to:', next);
-          router.push(next);
+
+          // Use window.location.href for more reliable redirect after OAuth
+          setTimeout(() => {
+            console.log('🔄 Executing redirect...');
+            window.location.href = next;
+          }, 500); // Small delay to ensure session is saved
+
         } else {
           // Fallback: Try to get existing session (for older flows or edge cases)
           console.log('ℹ️ No code parameter, checking for existing session...');
@@ -80,30 +98,49 @@ function AuthCallbackContent() {
 
           if (sessionError) {
             console.error('❌ Session error:', sessionError);
-            setError(sessionError.message);
-            setTimeout(() => router.push('/login'), 3000);
+            if (mounted) setError(sessionError.message);
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 3000);
             return;
           }
 
           if (session) {
             console.log('✅ Existing session found, redirecting...');
             const next = searchParams.get('next') || '/app/overview';
-            router.push(next);
+            setTimeout(() => {
+              window.location.href = next;
+            }, 500);
           } else {
             console.error('❌ No code and no session found');
-            setError('No authorization code found. Please try signing in again.');
-            setTimeout(() => router.push('/login'), 3000);
+            if (mounted) setError('No authorization code found. Please try signing in again.');
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 3000);
           }
         }
       } catch (err: any) {
         console.error('❌ Auth callback error:', err);
-        setError(err.message || 'Authentication failed');
-        setTimeout(() => router.push('/login'), 3000);
+        if (mounted) setError(err.message || 'Authentication failed');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 3000);
       }
     };
 
     handleCallback();
-  }, [router, searchParams]);
+
+    // Safety timeout - force redirect after 10 seconds
+    redirectTimeout = setTimeout(() => {
+      console.warn('⚠️ Redirect timeout - forcing redirect to overview');
+      window.location.href = '/app/overview';
+    }, 10000);
+
+    return () => {
+      mounted = false;
+      if (redirectTimeout) clearTimeout(redirectTimeout);
+    };
+  }, [searchParams]);
 
   return (
     <Box

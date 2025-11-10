@@ -42,32 +42,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
 
       // Handle successful sign-in from OAuth
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Check if this is a new user or existing user
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select('id')
-          .eq('id', session.user.id)
-          .single();
-
-        // Create user record if it doesn't exist
-        if (!existingUser) {
+      // Note: User creation is primarily handled in the OAuth callback page
+      // This is a fallback for other auth methods
+      if (event === 'SIGNED_IN' && session?.user && !window.location.pathname.includes('/auth/callback')) {
+        try {
+          // Use upsert to handle both new and existing users
           await supabase
             .from('users')
-            .insert({
+            .upsert({
               id: session.user.id,
               email: session.user.email,
               name: session.user.user_metadata?.name || session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
               plan_id: 'free',
               subscription_status: 'active',
               last_login: new Date().toISOString(),
+            }, {
+              onConflict: 'id',
+              ignoreDuplicates: false,
             });
-        } else {
-          // Update last login for existing user
-          await supabase
-            .from('users')
-            .update({ last_login: new Date().toISOString() })
-            .eq('id', session.user.id);
+          console.log('✅ User record updated via auth context');
+        } catch (err) {
+          console.error('⚠️ Error updating user record via auth context:', err);
+          // Non-critical - user is authenticated anyway
         }
       }
     });

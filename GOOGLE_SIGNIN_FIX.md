@@ -442,10 +442,62 @@ Your Google Sign-In is working when:
 
 ---
 
-**Status:** ✅ FIXED
+**Status:** ✅ FIXED (Updated with additional improvements)
 **Priority:** CRITICAL - Blocking user sign-ups
 **Impact:** All Google OAuth sign-ins now work properly
-**Last Updated:** Now
+**Last Updated:** 2025-11-09
+
+## 🔄 Additional Improvements (2025-11-09)
+
+### Issue: Redirect Not Completing
+Some users reported the callback page showing "Completing sign in..." but never redirecting.
+
+### Root Cause:
+- `router.push()` can be unreliable in OAuth callback scenarios
+- Race conditions between callback handler and AuthProvider's onAuthStateChange
+- No safety timeout for stuck redirects
+
+### Additional Fixes Applied:
+
+1. **Replaced `router.push()` with `window.location.href`:**
+   - More reliable redirect after OAuth
+   - Ensures full page reload with new session
+   - Prevents client-side routing issues
+
+2. **Added Safety Timeout:**
+   - Forces redirect after 10 seconds if stuck
+   - Prevents infinite loading state
+   - Redirects to /app/overview as fallback
+
+3. **Improved Database Error Handling:**
+   - Wrapped user record creation in try-catch
+   - Continues authentication even if DB update fails
+   - User is authenticated first, DB is secondary
+
+4. **Prevented Race Conditions:**
+   - AuthProvider now checks if we're on callback page
+   - Avoids duplicate user record creation attempts
+   - Callback handler has priority for user creation
+
+5. **Better Component Lifecycle Management:**
+   - Added mounted flag to prevent state updates on unmounted component
+   - Proper cleanup of timeouts
+   - Removed router dependency from useEffect
+
+### Changes Made:
+
+**File: `app/auth/callback/page.tsx`**
+- Replaced all `router.push()` with `window.location.href`
+- Added 500ms delay before redirect to ensure session is saved
+- Added 10-second safety timeout to force redirect
+- Added mounted flag for component lifecycle
+- Improved error handling with try-catch blocks
+
+**File: `lib/auth/context.tsx`**
+- Added check to skip user creation when on callback page
+- Prevents race condition with callback handler
+- Uses upsert for all user record operations
+- Better error handling
 
 ---
 
