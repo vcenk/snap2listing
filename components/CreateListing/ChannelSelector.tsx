@@ -55,19 +55,27 @@ export default function ChannelSelector({
   useEffect(() => {
     const fetchChannels = async () => {
       try {
+        console.log('🔄 Fetching channels from API...');
         const response = await fetch('/api/channels');
+        console.log('📡 Response status:', response.status);
+
         const data = await response.json();
+        console.log('📦 Response data:', data);
 
         if (!data.success) {
+          console.error('❌ API returned error:', data.error);
           throw new Error(data.error || 'Failed to fetch channels');
         }
+
+        console.log('✅ Channels loaded:', data.channels?.length, 'channels');
+        console.log('📋 Channel details:', data.channels);
 
         setChannels(data.channels);
         if (onChannelsLoaded) {
           onChannelsLoaded(data.channels);
         }
       } catch (err) {
-        console.error('Error fetching channels:', err);
+        console.error('❌ Error fetching channels:', err);
         setError('Failed to load channels. Please refresh the page.');
       } finally {
         setLoading(false);
@@ -100,6 +108,14 @@ export default function ChannelSelector({
     );
   }
 
+  // Debug: Log render state
+  console.log('🎨 ChannelSelector render:', {
+    loading,
+    error,
+    channelsCount: channels.length,
+    channels: channels.map(c => c.name),
+  });
+
   return (
     <Box>
       <Stack direction="row" alignItems="center" spacing={2} mb={2}>
@@ -111,6 +127,12 @@ export default function ChannelSelector({
         Choose one or more platforms where you want to list this product. Each channel has unique requirements that we'll optimize for you.
       </Typography>
 
+      {/* Debug info */}
+      {!loading && !error && channels.length === 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          No channels found. Channels count: {channels.length}
+        </Alert>
+      )}
 
       <Grid container spacing={2}>
         {channels.map((channel) => {
