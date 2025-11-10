@@ -50,9 +50,16 @@ export default function ChannelSelector({
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasFetched, setHasFetched] = useState(false); // Prevent duplicate fetches
 
   // Load channels from API
   useEffect(() => {
+    // Only fetch once
+    if (hasFetched) {
+      console.log('⏭️ Skipping fetch - already fetched');
+      return;
+    }
+
     const fetchChannels = async () => {
       try {
         console.log('🔄 Fetching channels from API...');
@@ -71,12 +78,15 @@ export default function ChannelSelector({
         console.log('📋 Channel details:', data.channels);
 
         setChannels(data.channels || []);
+        setHasFetched(true); // Mark as fetched
+
         if (onChannelsLoaded && data.channels) {
           onChannelsLoaded(data.channels);
         }
       } catch (err) {
         console.error('❌ Error fetching channels:', err);
         setError('Failed to load channels. Please refresh the page.');
+        setHasFetched(true); // Mark as fetched even on error
       } finally {
         setLoading(false);
       }
@@ -84,7 +94,7 @@ export default function ChannelSelector({
 
     console.log('⚡ useEffect triggered - fetching channels');
     fetchChannels();
-  }, []); // Remove onChannelsLoaded dependency to prevent re-fetching
+  }, [hasFetched]); // Only re-run if hasFetched changes (which it won't after first fetch)
 
   const handleToggle = (channelId: string) => {
     const updated = selectedChannels.includes(channelId)
